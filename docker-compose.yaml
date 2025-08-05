@@ -13,6 +13,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - pay-first-network
 
   web:
     image: pay-first-web-app
@@ -25,10 +27,15 @@ services:
       - "5678:5678"  # Debugpy port
     depends_on:
       - db
-    environment:
-      - DATABASE_URL=postgres://myuser:mypassword@db:5432/mydb
+    env_file:
+      - ./.env
+    networks:
+      - pay-first-network
     # Start debugpy for VS Code Python debugging
     entrypoint: ./entrypoint.sh
 
 volumes:
   postgres_data:
+networks:
+  pay-first-network:
+    external: true
