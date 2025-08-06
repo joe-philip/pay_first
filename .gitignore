@@ -6,3 +6,4 @@
 # *~
 .env
 entrypoint.sh
+__pycache__
