@@ -8,3 +8,5 @@
 entrypoint.sh
 __pycache__
 entrypoint.sh
+**/migrations/[0-9]*.py
+# **/migrations/*.py
