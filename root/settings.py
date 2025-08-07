@@ -129,5 +129,8 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'root.utils.exception_handlers.exception_handler'
+    'EXCEPTION_HANDLER': 'root.utils.exception_handlers.exception_handler',
+    'DEFAULT_RENDERER_CLASSES': [
+        'root.utils.renderers.JSONRenderer',
+    ],
 }

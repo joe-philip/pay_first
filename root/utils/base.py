@@ -1,6 +1,10 @@
+from typing import Any
+
+
 def fail(error: str) -> dict:
     """
-    Returns a dictionary indicating a failed operation with a provided error message.
+    Returns a dictionary indicating a failed operation
+    with a provided error message.
 
     Args:
         error (str): The error message describing the reason for failure.
@@ -13,4 +17,22 @@ def fail(error: str) -> dict:
         'status': False,
         'message': 'fail',
         'error': error
+    }
+
+
+def success(data: Any) -> dict:
+    """
+    Returns a standardized success response dictionary.
+
+    Args:
+        data (Any): The data to include in the response.
+
+    Returns:
+        dict: A dictionary containing the status, message,
+        and provided data under the 'error' key.
+    """
+    return {
+        'status': True,
+        'message': 'success',
+        'data': data
     }
