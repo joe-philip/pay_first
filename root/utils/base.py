@@ -29,7 +29,7 @@ def success(data: Any) -> dict:
 
     Returns:
         dict: A dictionary containing the status, message,
-        and provided data under the 'error' key.
+        and provided data under the 'data' key.
     """
     return {
         'status': True,

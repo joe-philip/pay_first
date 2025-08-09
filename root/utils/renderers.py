@@ -30,6 +30,6 @@ class JSONRenderer(Renderer):
             bytes: The rendered response data.
         """
         response: Response = renderer_context.get("response", None)
-        if response.status_code in range(200, 300):
+        if response and response.status_code in range(200, 300):
             data = success(data)
         return super().render(data, accepted_media_type, renderer_context)
