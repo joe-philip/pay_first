@@ -1,9 +1,12 @@
+from django.contrib.auth.models import User
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import ChangePasswordSerializer, SignupAPISerializer
+from .serializers import (ChangePasswordSerializer, SignupAPISerializer,
+                          UserProfileSerializer)
 
 # Create your views here.
 
@@ -34,3 +37,12 @@ class ChangePasswordAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=204)
+
+
+class UserProfileAPIView(RetrieveAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = User.objects.all()
+
+    def get_object(self) -> User:
+        return self.request.user

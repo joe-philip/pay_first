@@ -87,3 +87,9 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         user.set_password(self.validated_data.get('new_password'))
         user.save()
         return user
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'first_name', 'last_name')
