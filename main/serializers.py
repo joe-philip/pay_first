@@ -40,9 +40,50 @@ class SignupAPISerializer(serializers.ModelSerializer):
         validation_errors = validate_password(value)
         if not validation_errors:
             return value
-        raise serializers.ValidationError(value)
+        raise serializers.ValidationError(validation_errors)
 
     def save(self, **kwargs):
         user = super().save(**kwargs)
         user.set_password(self.validated_data.get('password'))
         user.save()
+
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    new_password = serializers.CharField(
+        write_only=True,
+        required=True
+    )
+
+    def validate_password(self, value: str) -> str:
+        user: User = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError('Incorrect old password')
+        return value
+
+    def validate_new_password(self, value: str) -> str:
+        validation_errors = validate_password(value)
+        if not validation_errors:
+            return value
+        raise serializers.ValidationError(validation_errors)
+
+    def validate(self, attrs):
+        if attrs.get('password') == attrs.get('new_password'):
+            raise serializers.ValidationError(
+                {
+                    "new_password": ['New password cannot be the same as the old password']
+                }
+            )
+        return attrs
+
+    class Meta:
+        model = User
+        fields = ('password', 'new_password')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def save(self, **kwargs):
+        user: User = self.context['request'].user
+        user.set_password(self.validated_data.get('new_password'))
+        user.save()
+        return user
