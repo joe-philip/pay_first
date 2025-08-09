@@ -1,3 +1,4 @@
+from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer as Renderer
 
 from root.utils.base import success
@@ -28,5 +29,7 @@ class JSONRenderer(Renderer):
         Returns:
             bytes: The rendered response data.
         """
-        data = success(data)
+        response: Response = renderer_context.get("response", None)
+        if response.status_code in range(200, 300):
+            data = success(data)
         return super().render(data, accepted_media_type, renderer_context)
