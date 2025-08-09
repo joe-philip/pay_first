@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'rest_framework',
+    "rest_framework.authtoken",
+    "main"
 ]
 
 MIDDLEWARE = [
@@ -78,7 +81,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("POSTGRES_DB"),
         "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD":os.environ.get("POSTGRES_PASSWORD"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
         "PORT": os.environ.get("DB_PORT", 5432),
         'HOST': os.environ.get("DB_HOST")
     }
@@ -125,3 +128,13 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'root.utils.exception_handlers.exception_handler',
+    'DEFAULT_RENDERER_CLASSES': [
+        'root.utils.renderers.JSONRenderer'
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        "rest_framework.authentication.TokenAuthentication"
+    ]
+}
