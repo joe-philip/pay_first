@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'rest_framework',
+    "rest_framework.authtoken",
     "main"
 ]
 
@@ -131,6 +132,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'root.utils.exception_handlers.exception_handler',
     'DEFAULT_RENDERER_CLASSES': [
-        'root.utils.renderers.JSONRenderer',
+        'root.utils.renderers.JSONRenderer'
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        "rest_framework.authentication.TokenAuthentication"
+    ]
 }
