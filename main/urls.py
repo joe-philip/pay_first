@@ -10,4 +10,8 @@ urlpatterns = [
         name="login"
     ),
     path("logout", views.LogoutAPIView.as_view(), name="logout"),
+    path(
+        "change_password", views.ChangePasswordAPIView.as_view(),
+        name="change_password"
+    ),
 ]
