@@ -3,7 +3,7 @@ from rest_framework.request import Request
 from rest_framework.views import View
 
 
-class IsContanctGroupOwner(BasePermission):
+class IsContactGroupOwner(BasePermission):
     """
     Custom permission to only allow owners of a contact group to access it.
     """
