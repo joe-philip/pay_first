@@ -16,7 +16,7 @@ class SignupAPIView(APIView):
         serializer = SignupAPISerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)
+        return Response(serializer.data, status=201)
 
 
 class LogoutAPIView(APIView):
