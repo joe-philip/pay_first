@@ -220,3 +220,83 @@ class SignupAPITestCase(APITestCase, BasicTestsMixin):
         assert (
             User.objects.filter(last_name="").count() == 1
         ), "Expected one user to be created even without last name"
+
+
+class LoginAPITestCase(APITestCase, BasicTestsMixin):
+    def setUp(self):
+        self.BASE_URL = "/login"
+        self.user = self.create_user()
+        return super().setUp()
+
+    def test_login_success(self):
+        """
+        Test the login endpoint with valid credentials.
+        """
+        payload = {
+            "username": self.user.username,
+            "password": DEFAULT_PASSWORD,
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 200
+        ), "Expected status code 200 for successful login"
+        assert "token" in response.data, "Expected 'token' in response data"
+
+    def test_incorrect_password(self):
+        """
+        Test the login endpoint with incorrect password.
+        """
+        payload = {
+            "username": self.user.username,
+            "password": "wrongpassword",
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 401
+        ), "Expected status code 400 for incorrect password"
+
+    def test_non_existent_user(self):
+        """
+        Test the login endpoint with a non-existent user.
+        """
+        payload = {
+            "username": "non_existent_user@example.com",
+            "password": "wrongpassword",
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for non-existent user"
+        assert "username" in response.data.get(
+            "error", {}
+        ), "Expected 'username' field in error response"
+
+    def test_missing_username(self):
+        """
+        Test the login endpoint with a missing username.
+        """
+        payload = {
+            "password": DEFAULT_PASSWORD,
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for missing username"
+        assert "username" in response.data.get(
+            "error", {}
+        ), "Expected 'username' field in error response"
+
+    def test_missing_password(self):
+        """
+        Test the login endpoint with a missing password.
+        """
+        payload = {
+            "username": DEFAULT_USERNAME,
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for missing password"
+        assert "password" in response.data.get(
+            "error", {}
+        ), "Expected 'password' field in error response"

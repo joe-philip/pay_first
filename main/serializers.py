@@ -1,5 +1,8 @@
+from rest_framework.exceptions import AuthenticationFailed
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework import serializers
+from rest_framework.authtoken.serializers import AuthTokenSerializer
 
 from .validators import is_email_format, user_exists, validate_password
 
@@ -46,6 +49,30 @@ class SignupAPISerializer(serializers.ModelSerializer):
         user = super().save(**kwargs)
         user.set_password(self.validated_data.get('password'))
         user.save()
+
+
+class LoginSerializer(AuthTokenSerializer):
+    def validate_username(self, value: str) -> str:
+        if User.objects.filter(username=value).exists():
+            return value
+        raise serializers.ValidationError('User does not exist')
+
+    def validate(self, attrs):
+        username = attrs.get('username')
+        password = attrs.get('password')
+        if username and password:
+            user = authenticate(
+                request=self.context.get('request'),
+                username=username, password=password
+            )
+            if not user:
+                raise AuthenticationFailed(
+                    'Invalid credentials', code='authorization')
+        else:
+            msg = _('Must include "username" and "password".')
+            raise serializers.ValidationError(msg, code='authorization')
+        attrs['user'] = user
+        return attrs
 
 
 class ChangePasswordSerializer(serializers.ModelSerializer):
