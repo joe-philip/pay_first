@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 # Create your tests here.
@@ -18,6 +19,14 @@ class BasicTestsMixin:
         if "username" not in kwargs:
             kwargs["username"] = DEFAULT_USERNAME
         return User.objects.create_user(*args, **kwargs)
+
+    def create_user_token(self, *args, **kwargs):
+        """
+        Create a user and return the associated token.
+        """
+        if "user" not in kwargs:
+            kwargs["user"] = self.create_user(*args, **kwargs)
+        return Token.objects.create(**kwargs)
 
 
 class SignupAPITestCase(APITestCase, BasicTestsMixin):
@@ -300,3 +309,196 @@ class LoginAPITestCase(APITestCase, BasicTestsMixin):
         assert "password" in response.data.get(
             "error", {}
         ), "Expected 'password' field in error response"
+
+
+class LogoutAPITestCase(APITestCase, BasicTestsMixin):
+    def setUp(self):
+        self.BASE_URL = "/logout"
+        self.user = self.create_user()
+        self.token = self.create_user_token(user=self.user)
+        self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
+        return super().setUp()
+
+    def test_logout_success(self):
+        """Test the logout endpoint with a valid token."""
+        self.client.credentials(**self.headers)
+        response = self.client.delete(self.BASE_URL)
+        assert (
+            response.status_code == 204
+        ), "Expected status code 204 for successful logout"
+        assert not Token.objects.filter(
+            user=self.user
+        ).exists(), "Expected token to be deleted after logout"
+
+    def test_logout_without_token(self):
+        """Test the logout endpoint without providing a token."""
+        response = self.client.delete(self.BASE_URL)
+        assert (
+            response.status_code == 401
+        ), "Expected status code 401 for unauthorized access"
+        assert "error" in response.data, "Expected 'error' field in error response"
+
+
+class ChangePasswordAPITestCase(APITestCase, BasicTestsMixin):
+    def setUp(self):
+        self.BASE_URL = "/change_password"
+        self.token = self.create_user_token()
+        self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
+        return super().setUp()
+
+    def test_change_password_success(self):
+        """Test changing password with valid credentials."""
+        self.client.credentials(**self.headers)
+        new_password = "NewPassword*1"
+        payload = {
+            "password": DEFAULT_PASSWORD,
+            "new_password": new_password,
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 204
+        ), "Expected status code 204 for successful password change"
+        user = User.objects.get(username=self.token.user.username)
+        assert user.check_password(new_password), "Expected new password to be set correctly"
+
+    def test_change_password_incorrect_old_password(self):
+        """Test changing password with incorrect old password."""
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
+        payload = {
+            "password": "wrongpassword",
+            "new_password": DEFAULT_PASSWORD,
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for incorrect old password"
+
+    def test_change_password_missing_old_password(self):
+        """Test changing password without providing old password."""
+        self.client.credentials(**self.headers)
+        payload = {
+            "new_password": "NewPassword*1",
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for missing old password"
+        assert "password" in response.data.get(
+            "error", {}
+        ), "Expected 'password' field in error response"
+
+    def test_change_password_missing_new_password(self):
+        """Test changing password without providing new password."""
+        self.client.credentials(**self.headers)
+        payload = {
+            "password": DEFAULT_PASSWORD,
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for missing new password"
+        assert "new_password" in response.data.get(
+            "error", {}
+        ), "Expected 'new_password' field in error response"
+
+    def test_short_new_password(self):
+        """
+        Test that changing password fails if the password is too short.
+        """
+        payload = {
+            "password": DEFAULT_PASSWORD,
+            "new_password": "short*p",  # Passwords with length of 7 characters
+        }
+        self.client.credentials(**self.headers)
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for short password"
+        assert "new_password" in response.data.get(
+            "error", {}
+        ), "Expected 'new_password' field in error response"
+
+    def test_numeric_new_password(self):
+        """
+        Test that changing password fails if the password is numeric.
+        """
+        self.client.credentials(**self.headers)
+        payload = {
+            "password": DEFAULT_PASSWORD,
+            "new_password": "12345678",
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for short password"
+        assert "new_password" in response.data.get(
+            "error", {}
+        ), "Expected 'new_password' field in error response"
+
+    def test_numeric_new_password(self):
+        """
+        Test that changing password fails if the password is numeric.
+        """
+        self.client.credentials(**self.headers)
+        payload = {
+            "password": DEFAULT_PASSWORD,
+            "new_password": "12345678",
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for short password"
+        assert "new_password" in response.data.get(
+            "error", {}
+        ), "Expected 'new_password' field in error response"
+
+    def test_test_lower_case_new_password(self):
+        """
+        Test that changing password fails if the password is lowercase.
+        """
+        self.client.credentials(**self.headers)
+        payload = {
+            "password": DEFAULT_PASSWORD,
+            "new_password": DEFAULT_PASSWORD.lower(),
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for lowercase password"
+        assert "new_password" in response.data.get(
+            "error", {}
+        ), "Expected 'new_password' field in error response"
+
+    def test_test_upper_case_new_password(self):
+        """
+        Test that changing password fails if the password is uppercase.
+        """
+        self.client.credentials(**self.headers)
+        payload = {
+            "password": DEFAULT_PASSWORD,
+            "new_password": DEFAULT_PASSWORD.upper(),
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for uppercase password"
+        assert "new_password" in response.data.get(
+            "error", {}
+        ), "Expected 'new_password' field in error response"
+
+    def test_new_password_without_special_characters(self):
+        """
+        Test that changing password fails if the password does not contain special characters.
+        """
+        self.client.credentials(**self.headers)
+        payload = {
+            "password": DEFAULT_PASSWORD,
+            "new_password": "Password123",
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 for password without special characters"
+        assert "new_password" in response.data.get(
+            "error", {}
+        ), "Expected 'new_password' field in error response"
