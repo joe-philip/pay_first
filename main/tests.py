@@ -359,7 +359,9 @@ class ChangePasswordAPITestCase(APITestCase, BasicTestsMixin):
             response.status_code == 204
         ), "Expected status code 204 for successful password change"
         user = User.objects.get(username=self.token.user.username)
-        assert user.check_password(new_password), "Expected new password to be set correctly"
+        assert user.check_password(
+            new_password
+        ), "Expected new password to be set correctly"
 
     def test_change_password_incorrect_old_password(self):
         """Test changing password with incorrect old password."""
@@ -499,6 +501,23 @@ class ChangePasswordAPITestCase(APITestCase, BasicTestsMixin):
         assert (
             response.status_code == 400
         ), "Expected status code 400 for password without special characters"
+        assert "new_password" in response.data.get(
+            "error", {}
+        ), "Expected 'new_password' field in error response"
+
+    def test_same_old_password_and_new_password(self):
+        """
+        Test that changing password fails if the old password and new password are same.
+        """
+        self.client.credentials(**self.headers)
+        payload = {
+            "password": DEFAULT_PASSWORD,
+            "new_password": DEFAULT_PASSWORD,
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        assert (
+            response.status_code == 400
+        ), "Expected status code 400 when new passowrd and old password are same"
         assert "new_password" in response.data.get(
             "error", {}
         ), "Expected 'new_password' field in error response"
