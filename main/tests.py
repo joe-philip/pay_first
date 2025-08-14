@@ -18,7 +18,15 @@ class BasicTestsMixin:
             kwargs["password"] = DEFAULT_PASSWORD
         if "username" not in kwargs:
             kwargs["username"] = DEFAULT_USERNAME
-        return User.objects.create_user(*args, **kwargs)
+        username = kwargs.pop('username')
+        password = kwargs.get('password')
+        user, created = User.objects.get_or_create(
+            username=username, defaults=kwargs
+        )
+        if created:
+            user.set_password(password)
+            user.save()
+        return user
 
     def create_user_token(self, *args, **kwargs):
         """
@@ -26,7 +34,9 @@ class BasicTestsMixin:
         """
         if "user" not in kwargs:
             kwargs["user"] = self.create_user(*args, **kwargs)
-        return Token.objects.create(**kwargs)
+        user = kwargs.pop("user")
+        token, _ = Token.objects.get_or_create(user=user, defaults=kwargs)
+        return token
 
 
 class SignupAPITestCase(APITestCase, BasicTestsMixin):
