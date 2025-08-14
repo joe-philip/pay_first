@@ -521,3 +521,39 @@ class ChangePasswordAPITestCase(APITestCase, BasicTestsMixin):
         assert "new_password" in response.data.get(
             "error", {}
         ), "Expected 'new_password' field in error response"
+
+
+class ProfileAPITestCase(APITestCase, BasicTestsMixin):
+    def setUp(self):
+        self.BASE_URL = "/profile"
+        self.token = self.create_user_token()
+        self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
+        return super().setUp()
+
+    def test_profile_api_success(self):
+        """
+        Tests the profile API endpoint for a successful response.
+
+        This test sends a GET request to the profile API endpoint using the provided headers.
+        It asserts that the response status code is 201 (Created) and that the returned username
+        matches the username associated with the authentication token.
+
+        Assertions:
+            - The response status code is 201.
+            - The "username" field in the response data matches the expected username.
+        """
+        response = self.client.get(self.BASE_URL, **self.headers)
+        assert response.status_code == 200, "Expected api status code be 200"
+        assert (
+            response.data.get("username") == self.token.user.username
+        ), f"Expected to be {self.token.user.username}"
+
+    def test_profile_api_without_auth_token(self):
+        """
+        Test the profile API without providing an authentication token.
+        """
+        response = self.client.get(self.BASE_URL)
+        assert (
+            response.status_code == 401
+        ), "Expected status code 401 for unauthorized access"
+        assert "error" in response.data, "Expected 'error' field in error response"
