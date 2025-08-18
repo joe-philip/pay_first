@@ -40,6 +40,10 @@ class BasicTestsMixin:
 
 
 class SignupAPITestCase(APITestCase, BasicTestsMixin):
+    """
+    Signup API Test Cases
+    """
+
     def setUp(self):
         self.BASE_URL = "/signup"
         return super().setUp()
@@ -242,6 +246,9 @@ class SignupAPITestCase(APITestCase, BasicTestsMixin):
 
 
 class LoginAPITestCase(APITestCase, BasicTestsMixin):
+    """
+    Login API Test cases
+    """
     def setUp(self):
         self.BASE_URL = "/login"
         self.user = self.create_user()
@@ -322,6 +329,9 @@ class LoginAPITestCase(APITestCase, BasicTestsMixin):
 
 
 class LogoutAPITestCase(APITestCase, BasicTestsMixin):
+    """
+    Logout API Test Cases
+    """
     def setUp(self):
         self.BASE_URL = "/logout"
         self.user = self.create_user()
@@ -350,6 +360,9 @@ class LogoutAPITestCase(APITestCase, BasicTestsMixin):
 
 
 class ChangePasswordAPITestCase(APITestCase, BasicTestsMixin):
+    """
+    Change Password API Test Case
+    """
     def setUp(self):
         self.BASE_URL = "/change_password"
         self.token = self.create_user_token()
@@ -534,6 +547,9 @@ class ChangePasswordAPITestCase(APITestCase, BasicTestsMixin):
 
 
 class ProfileAPITestCase(APITestCase, BasicTestsMixin):
+    """
+    Profile API Test case
+    """
     def setUp(self):
         self.BASE_URL = "/profile"
         self.token = self.create_user_token()

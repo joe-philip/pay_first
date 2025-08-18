@@ -24,6 +24,9 @@ class MainTestsMixin(BasicTestsMixin):
 
 
 class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
+    """
+    Contact Groups CRUD API Test cases
+    """
     def setUp(self):
         self.base_url = "/user/contact-groups"
         self.token = self.create_user_token()
