@@ -6,10 +6,10 @@ from . import views
 router = DefaultRouter()
 
 router.register(
-    r'contact-groups', views.ContactGroupViewSet,
-    basename='contact-groups'
+    r"contact-groups", views.ContactGroupViewSet,
+    basename="contact-groups"
 )
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]
