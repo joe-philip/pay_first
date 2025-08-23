@@ -1128,3 +1128,17 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 404
 
     # Update API Test Cases End
+
+    # Delete API Test Cases Start
+
+    def test_transaction_delete_api_success(self):
+        owner = self.token.user
+        contact = self.create_contact(owner=owner)
+        instance = self.create_debit_transaction(contact=contact)
+        response = self.client.delete(
+            self.base_url + f"/{instance.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 204
+        assert not ContactGroup.objects.filter(owner=owner).exists()
