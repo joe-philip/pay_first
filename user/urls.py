@@ -13,6 +13,10 @@ router.register(
     r"contact", views.ContactsViewSet,
     basename="contact"
 )
+router.register(
+    r"transaction", views.TransactionsViewSet,
+    basename="transaction"
+)
 
 urlpatterns = [
     path("", include(router.urls)),
