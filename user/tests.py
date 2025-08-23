@@ -1,14 +1,22 @@
+from datetime import datetime
+
+from pytz import timezone
 from rest_framework.test import APITestCase
 
 from main.tests import BasicTestsMixin
 
-from .models import ContactGroup, Contacts
+from .choices import TransactionTypeChoices
+from .models import ContactGroup, Contacts, Transactions
 
 # Create your tests here.
 
 DEFAULT_CONTACT_GROUP_NAME = "Test Contact Group"
 DEFAULT_CONTACT_SUB_GROUP_NAME = "Test Contact Sub Group"
 DEFAULT_CONTACT_NAME = "Test Contact"
+DEFAULT_TRANSACTION_NAME = "Test Transaction"
+DEFAULT_CREDIT_TRANSACTION_NAME = "Test Credit Transaction"
+DEFAULT_DEBIT_TRANSACTION_NAME = "Test Debit Transaction"
+DEFAULT_TIMEZONE = timezone("Asia/Calcutta")
 
 
 class MainTestsMixin(BasicTestsMixin):
@@ -25,6 +33,7 @@ class MainTestsMixin(BasicTestsMixin):
 
     def create_contact(self, **kwargs) -> Contacts:
         groups = kwargs.pop('groups', [])
+        kwargs["owner"] = kwargs.get("owner", self.create_user())
         if (contact := Contacts.objects.filter(**kwargs, groups__in=groups)).exists():
             return contact.first()
         contact = Contacts.objects.create(**kwargs)
@@ -32,6 +41,24 @@ class MainTestsMixin(BasicTestsMixin):
             contact.groups.add(groups)
             contact.save()
         return contact
+
+    def create_transaction(self, _type: set, **kwargs) -> Transactions:
+        kwargs["label"] = kwargs.get("label", DEFAULT_TRANSACTION_NAME)
+        kwargs["contact"] = kwargs.get("contact", self.create_contact())
+        kwargs["_type"] = _type
+        kwargs["amount"] = kwargs.get("amount", 10)
+        kwargs["description"] = kwargs.get("description", "")
+        kwargs["return_date"] = kwargs.get("return_date")
+        kwargs["date"] = kwargs.get("date", datetime.now(tz=DEFAULT_TIMEZONE))
+        if (transaction := Transactions.objects.filter(_type=_type, **kwargs)).exists():
+            return transaction.first()
+        return Transactions.objects.create(_type=_type, **kwargs)
+
+    def create_debit_transaction(self, **kwargs) -> Transactions:
+        return self.create_transaction(_type=TransactionTypeChoices.DEBIT.value, **kwargs)
+
+    def create_credit_transaction(self, **kwargs) -> Transactions:
+        return self.create_transaction(_type=TransactionTypeChoices.CREDIT.value, **kwargs)
 
 
 class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
@@ -224,7 +251,7 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
         instance = self.create_contact_group(owner=owner)
         parent_instance = self.create_contact_group(
             name="parent instance", owner=owner
-            )
+        )
         data = {
             "name": f"Updated {DEFAULT_CONTACT_SUB_GROUP_NAME}",
             "parent_group": parent_instance.id
@@ -236,7 +263,6 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
             **self.headers
         )
         assert response.status_code == 404
-
 
     def test_update_with_same_instance_and_same_parent(self):
         owner = self.token.user
@@ -611,3 +637,12 @@ class ContactsAPITestCase(APITestCase, MainTestsMixin):
             **self.headers
         )
         assert response.status_code == 404
+
+
+class TransactionsAPITestCase(APITestCase, MainTestsMixin):
+    def setUp(self):
+        self.base_url = "/user/transaction"
+        self.token = self.create_user_token()
+        self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
+        return super().setUp()
+
