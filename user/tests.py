@@ -1051,3 +1051,13 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         )
         response.status_code == 200
         assert response.data.get("id") == instance.id
+
+    def test_credit_transaction_retrieve_invalid_pk(self):
+        owner = self.token.user
+        contact = self.create_contact(owner=owner)
+        self.create_credit_transaction(contact=contact)
+        response = self.client.get(
+            self.base_url + f"/{0}/",
+            **self.headers
+        )
+        assert response.status_code == 404
