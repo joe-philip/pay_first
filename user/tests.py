@@ -797,3 +797,24 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         response_data = response.data
         assert response.status_code == 201
         assert response_data.get("return_date") == None
+
+    def test_credit_transaction_create_without_description(self):
+        owner = self.token.user
+        contact = self.create_contact(owner=owner)
+        data = {
+            "label": DEFAULT_TRANSACTION_NAME,
+            "contact": contact.id,
+            "_type": TransactionTypeChoices.CREDIT.value,
+            "amount": 10,
+            "return_date": None,
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE)),
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        response_data = response.data
+        assert response.status_code == 201
+        assert response_data.get("description") == ""
