@@ -1061,3 +1061,13 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
             **self.headers
         )
         assert response.status_code == 404
+
+    def test_debit_transaction_retrieve_invalid_pk(self):
+        owner = self.token.user
+        contact = self.create_contact(owner=owner)
+        self.create_debit_transaction(contact=contact)
+        response = self.client.get(
+            self.base_url + f"/{0}/",
+            **self.headers
+        )
+        assert response.status_code == 404
