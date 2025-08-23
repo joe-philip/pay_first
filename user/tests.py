@@ -1016,3 +1016,12 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 200
         assert len(response.data) == 2
+
+    def test_transaction_list_with_empty_data(self):
+        response = self.client.get(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data == []
