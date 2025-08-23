@@ -42,7 +42,7 @@ class MainTestsMixin(BasicTestsMixin):
             contact.save()
         return contact
 
-    def create_transaction(self, _type: set, **kwargs) -> Transactions:
+    def create_transaction(self, _type: str, **kwargs) -> Transactions:
         kwargs["label"] = kwargs.get("label", DEFAULT_TRANSACTION_NAME)
         kwargs["contact"] = kwargs.get("contact", self.create_contact())
         kwargs["_type"] = _type
@@ -1006,8 +1006,9 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
     # List API Test cases Start
 
     def test_transaction_list_success(self):
-        self.create_credit_transaction(owner=self.token.user)
-        self.create_debit_transaction(owner=self.token.user)
+        contact = self.create_contact(owner=self.token.user)
+        self.create_credit_transaction(contact=contact)
+        self.create_debit_transaction(contact=contact)
         response = self.client.get(
             self.base_url + "/",
             content_type="application/json",
