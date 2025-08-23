@@ -940,3 +940,25 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         errors = response.data
         assert response.status_code == 400
         assert "contact" in errors.get("error")
+
+    def test_credit_transaction_create_withoud_label(self):
+        owner = self.token.user
+        contact = self.create_contact(owner=owner)
+        owner = self.token.user
+        data = {
+            "contact": contact.id,
+            "_type": TransactionTypeChoices.CREDIT.value,
+            "amount": 10,
+            "description": "",
+            "return_date": None,
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE)),
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        errors = response.data
+        assert response.status_code == 400
+        assert "label" in errors.get("error")
