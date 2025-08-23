@@ -62,7 +62,7 @@ class Transactions(models.Model):
     )
     _type = models.CharField(choices=TypeChoices.choices)
     amount = models.FloatField()
-    description = models.TextField()
+    description = models.TextField(blank=True)
     return_date = models.DateTimeField(null=True)
     date = models.DateTimeField(auto_now=True)
 
