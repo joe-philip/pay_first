@@ -58,7 +58,9 @@ class Contacts(models.Model):
 class Transactions(models.Model):
     label = models.CharField()
     contact = models.ForeignKey(
-        Contacts, related_name="transactions", on_delete=models.CASCADE
+        Contacts,
+        related_name="transactions",
+        on_delete=models.CASCADE
     )
     _type = models.CharField(choices=TransactionTypeChoices.choices)
     amount = models.FloatField()
