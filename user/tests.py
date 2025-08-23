@@ -50,9 +50,9 @@ class MainTestsMixin(BasicTestsMixin):
         kwargs["description"] = kwargs.get("description", "")
         kwargs["return_date"] = kwargs.get("return_date")
         kwargs["date"] = kwargs.get("date", datetime.now(tz=DEFAULT_TIMEZONE))
-        if (transaction := Transactions.objects.filter(_type=_type, **kwargs)).exists():
+        if (transaction := Transactions.objects.filter(**kwargs)).exists():
             return transaction.first()
-        return Transactions.objects.create(_type=_type, **kwargs)
+        return Transactions.objects.create(**kwargs)
 
     def create_debit_transaction(self, **kwargs) -> Transactions:
         return self.create_transaction(_type=TransactionTypeChoices.DEBIT.value, **kwargs)
@@ -1000,3 +1000,18 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
             **self.headers
         )
         assert response.status_code == 400
+
+    # Create API Test cases End
+
+    # List API Test cases Start
+
+    def test_transaction_list_success(self):
+        self.create_credit_transaction(owner=self.token.user)
+        self.create_debit_transaction(owner=self.token.user)
+        response = self.client.get(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 2
