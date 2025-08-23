@@ -8,4 +8,5 @@ psycopg2-binary==2.9.10
 Pygments==2.19.2
 pytest==8.4.1
 pytest-django==4.11.1
+pytz==2025.2
 sqlparse==0.5.3
