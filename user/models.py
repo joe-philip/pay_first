@@ -1,6 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from user.choices import TypeChoices
+
 # Create your models here.
 
 
@@ -51,3 +53,19 @@ class Contacts(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+class Transactions(models.Model):
+    label = models.CharField()
+    contact = models.ForeignKey(Contacts, related_name="transactions")
+    _type = models.CharField(choices=TypeChoices.choices)
+    amount = models.FloatField()
+    description = models.TextField()
+    return_date = models.DateTimeField(null=True)
+
+    class Meta:
+        db_table = "transactions"
+        verbose_name = "Transaction"
+
+    def __str__(self) -> str:
+        return self.label
