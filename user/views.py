@@ -5,7 +5,7 @@ from rest_framework.viewsets import ModelViewSet
 from .models import ContactGroup, Contacts, Transactions
 from .permissions import IsContactGroupOwner, IsContactOwner, IsOwnTransaction
 from .serializers import (ContactGroupSerializer, ContactsSerializer,
-                          Transactions)
+                          TransactionsSerializer)
 
 # Create your views here.
 
@@ -30,7 +30,7 @@ class ContactsViewSet(ModelViewSet):
 
 
 class TransactionsViewSet(ModelViewSet):
-    serializer_class = Transactions
+    serializer_class = TransactionsSerializer
     permission_classes = (IsAuthenticated, IsOwnTransaction)
 
     def get_queryset(self) -> QuerySet[Transactions]:
