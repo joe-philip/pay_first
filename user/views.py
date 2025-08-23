@@ -2,9 +2,10 @@ from django.db.models import QuerySet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from .models import ContactGroup, Contacts
-from .permissions import IsContactGroupOwner, IsContactOwner
-from .serializers import ContactGroupSerializer, ContactsSerializer
+from .models import ContactGroup, Contacts, Transactions
+from .permissions import IsContactGroupOwner, IsContactOwner, IsOwnTransaction
+from .serializers import (ContactGroupSerializer, ContactsSerializer,
+                          Transactions)
 
 # Create your views here.
 
@@ -26,3 +27,11 @@ class ContactsViewSet(ModelViewSet):
 
     def get_queryset(self) -> QuerySet[Contacts]:
         return Contacts.objects.filter(owner=self.request.user)
+
+
+class TransactionsViewSet(ModelViewSet):
+    serializer_class = Transactions
+    permission_classes = (IsAuthenticated, IsOwnTransaction)
+
+    def get_queryset(self) -> QuerySet[Transactions]:
+        return Transactions.objects.filter(contact__owner=self.request.user)
