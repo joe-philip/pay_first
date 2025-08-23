@@ -1150,3 +1150,14 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
             **self.headers
         )
         assert response.status_code == 404
+
+    def test_transaction_delete_api_with_other_owner_instance_id(self):
+        other_owner = self.create_user(username="otheruser@payfirst.com")
+        other_owner_contact = self.create_contact(owner=other_owner)
+        instance = self.create_debit_transaction(contact=other_owner_contact)
+        response = self.client.delete(
+            self.base_url + f"/{instance.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
