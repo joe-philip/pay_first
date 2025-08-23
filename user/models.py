@@ -1,6 +1,12 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 # Create your models here.
+
+
+def validate_contact_data_is_json_format(value) -> None:
+    if not isinstance(value, dict):
+        raise ValidationError("Invalid format json")
 
 
 class ContactGroup(models.Model):
@@ -33,7 +39,10 @@ class Contacts(models.Model):
         on_delete=models.CASCADE,
         related_name="contacts"
     )
-    data = models.JSONField(default=dict)
+    data = models.JSONField(
+        default=dict,
+        validators=[validate_contact_data_is_json_format]
+    )
     groups = models.ManyToManyField(ContactGroup, related_name="contacts")
 
     class Meta:

@@ -2,12 +2,13 @@ from rest_framework.test import APITestCase
 
 from main.tests import BasicTestsMixin
 
-from .models import ContactGroup
+from .models import ContactGroup, Contacts
 
 # Create your tests here.
 
 DEFAULT_CONTACT_GROUP_NAME = "Test Contact Group"
 DEFAULT_CONTACT_SUB_GROUP_NAME = "Test Contact Sub Group"
+DEFAULT_CONTACT_NAME = "Test Contact"
 
 
 class MainTestsMixin(BasicTestsMixin):
@@ -22,11 +23,22 @@ class MainTestsMixin(BasicTestsMixin):
         )
         return contact_group
 
+    def create_contact(self, **kwargs) -> Contacts:
+        groups = kwargs.pop('groups', [])
+        if (contact := Contacts.objects.filter(**kwargs, groups__in=groups)).exists():
+            return contact.first()
+        contact = Contacts.objects.create(**kwargs)
+        if groups:
+            contact.groups.add(groups)
+            contact.save()
+        return contact
+
 
 class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
     """
     Contact Groups CRUD API Test cases
     """
+
     def setUp(self):
         self.base_url = "/user/contact-groups"
         self.token = self.create_user_token()
@@ -207,6 +219,25 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 200
 
+    def test_update_api_with_invalid_pk(self):
+        owner = self.token.user
+        instance = self.create_contact_group(owner=owner)
+        parent_instance = self.create_contact_group(
+            name="parent instance", owner=owner
+            )
+        data = {
+            "name": f"Updated {DEFAULT_CONTACT_SUB_GROUP_NAME}",
+            "parent_group": parent_instance.id
+        }
+        response = self.client.put(
+            self.base_url + f"/0/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+
     def test_update_with_same_instance_and_same_parent(self):
         owner = self.token.user
         instance = self.create_contact_group(owner=owner)
@@ -325,3 +356,258 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
         assert instance.parent_group == None
 
     # Delete API Test Cases End
+
+
+class ContactsAPITestCase(APITestCase, MainTestsMixin):
+    def setUp(self):
+        self.base_url = "/user/contact"
+        self.token = self.create_user_token()
+        self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
+        return super().setUp()
+
+    def test_contact_create_success(self):
+        contact_group = self.create_contact_group()
+        owner = self.token.user
+        data = {
+            "name": DEFAULT_CONTACT_SUB_GROUP_NAME,
+            "groups": [contact_group.id],
+            "data": {}
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+        assert response.data["name"] == DEFAULT_CONTACT_SUB_GROUP_NAME
+        assert response.data["owner"] == owner.id
+
+    def test_contact_group_create_without_groups(self):
+        owner = self.token.user
+        data = {
+            "name": DEFAULT_CONTACT_SUB_GROUP_NAME,
+            "groups": [],
+            "data": {}
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+        assert response.data["name"] == DEFAULT_CONTACT_SUB_GROUP_NAME
+        assert response.data["owner"] == owner.id
+
+    def test_contact_create_with_empty_payload(self):
+        data = {}
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+
+    def test_contact_create_without_auth_token(self):
+        contact_group = self.create_contact_group()
+        data = {
+            "name": DEFAULT_CONTACT_SUB_GROUP_NAME,
+            "groups": [contact_group.id],
+            "data": {}
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json"
+        )
+        assert response.status_code == 401
+
+    def test_contact_create_with_already_existing_contact_name(self):
+        owner = self.token.user
+        parent_group = self.create_contact_group(owner=owner)
+        contact = self.create_contact(name=DEFAULT_CONTACT_NAME, owner=owner)
+        data = {
+            "name": contact.name,
+            "groups": [parent_group.id],
+            "data": {}
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        response_data = response.json()
+        assert response.status_code == 201
+
+    def test_contact_create_with_already_existing_contact_name_from_other_owner(self):
+        other_user = self.create_user(username="other_user@payfirst.com")
+        self.create_contact(owner=other_user)
+        data = {
+            "name": DEFAULT_CONTACT_SUB_GROUP_NAME,
+            "groups": [],
+            "data": {}
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+
+    # # Create API Test Cases End
+
+    # # List API Test Cases Start
+
+    def test_contact_list_success(self):
+        self.create_contact(owner=self.token.user)
+        response = self.client.get(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+
+    def test_contact_list_with_empty_data(self):
+        response = self.client.get(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data == []
+
+    def test_contact_group_list_without_auth_token(self):
+        self.create_contact(owner=self.token.user)
+        response = self.client.get(
+            self.base_url + "/",
+            content_type="application/json"
+        )
+        assert response.status_code == 401
+
+    # # List API Test Cases End
+
+    # # Retrieve API Test Cases Start
+
+    def test_retrieve_success(self):
+        owner = self.token.user
+        instance = self.create_contact(owner=owner)
+        response = self.client.get(
+            self.base_url + f"/{instance.id}/",
+            **self.headers
+        )
+        response.status_code == 200
+        assert response.data.get("id") == instance.id
+
+    def test_retrieve_invalid_pk_success(self):
+        owner = self.token.user
+        self.create_contact(owner=owner)
+        response = self.client.get(
+            self.base_url + f"/{0}/",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    def test_retrieve_api_without_auth_token(self):
+        owner = self.token.user
+        instance = self.create_contact(owner=owner)
+        response = self.client.get(
+            self.base_url + f"/{instance.id}/"
+        )
+        response.status_code == 401
+
+    # # Retrieve API Test Cases End
+
+    # # Update API Test Cases Start
+
+    def test_update_api_success(self):
+        owner = self.token.user
+        instance = self.create_contact(owner=owner)
+        group = self.create_contact_group(
+            name="parent instance", owner=owner
+        )
+        data = {
+            "name": "Updaed Contact name",
+            "groups": [group.id],
+            "data": {}
+        }
+        response = self.client.put(
+            self.base_url + f"/{instance.id}/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+
+    def test_contact_update_api_with_invalid_id(self):
+        owner = self.token.user
+        instance = self.create_contact(owner=owner)
+        group = self.create_contact_group(
+            name="parent instance", owner=owner
+        )
+        data = {
+            "name": "Updaed Contact name",
+            "groups": [group.id],
+            "data": {}
+        }
+        response = self.client.put(
+            self.base_url + f"/0/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    def test_update_contact_with_same_instance_name(self):
+        owner = self.token.user
+        instance = self.create_contact(owner=owner, name=DEFAULT_CONTACT_NAME)
+        data = {
+            "name": instance.name,
+            "groups": [],
+            "data": {}
+        }
+        response = self.client.put(
+            self.base_url + f"/{instance.id}/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        print(response.data)
+        assert response.status_code == 200
+
+    # # Update API Test Cases End
+
+    # # Delete API Test Cases Start
+
+    def test_contact_delete_api_success(self):
+        owner = self.token.user
+        instance = self.create_contact(owner=owner)
+        response = self.client.delete(
+            self.base_url + f"/{instance.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 204
+        assert not ContactGroup.objects.filter(owner=owner).exists()
+
+    def test_contact_delete_api_with_invalid_id(self):
+        response = self.client.delete(
+            self.base_url + "/0/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    def test_contact_delete_api_with_other_owner_instance_id(self):
+        other_owner = self.create_user(username="otheruser@payfirst.com")
+        instance = self.create_contact_group(owner=other_owner)
+        response = self.client.delete(
+            self.base_url + f"/{instance.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404

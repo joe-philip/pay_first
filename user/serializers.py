@@ -1,8 +1,9 @@
+from django.db.models import QuerySet
 from collections import OrderedDict
 
 from rest_framework import serializers
 
-from .models import ContactGroup
+from .models import ContactGroup, Contacts
 
 
 class ContactGroupSerializer(serializers.ModelSerializer):
@@ -48,3 +49,26 @@ class ContactGroupSerializer(serializers.ModelSerializer):
                 subgroups, many=True
             ).data
         return data
+
+
+class ContactsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contacts
+        fields = "__all__"
+        read_only_fields = ("owner",)
+        extra_kwargs = {
+            "groups": {"allow_empty": True}
+        }
+
+    def validate_groups(self, value: QuerySet[ContactGroup]) -> QuerySet[ContactGroup]:
+        invalid_groups = []
+        for item in value:
+            if item.owner != self.context["request"].user:
+                invalid_groups.append(str(item))
+        if invalid_groups:
+            raise serializers.ValidationError(f"Invalid group names {', '.join(invalid_groups)}")
+        return value
+
+    def save(self, **kwargs):
+        kwargs["owner"] = self.context["request"].user
+        return super().save(**kwargs)
