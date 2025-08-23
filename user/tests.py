@@ -984,3 +984,19 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         errors = response.data
         assert response.status_code == 400
         assert "label" in errors.get("error")
+
+    def test_credit_transaction_create_withoud_payload(self):
+        response = self.client.post(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+
+    def test_debit_transaction_create_withoud_payload(self):
+        response = self.client.post(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
