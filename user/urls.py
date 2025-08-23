@@ -9,6 +9,10 @@ router.register(
     r"contact-groups", views.ContactGroupViewSet,
     basename="contact-groups"
 )
+router.register(
+    r"contact", views.ContactsViewSet,
+    basename="contact"
+)
 
 urlpatterns = [
     path("", include(router.urls)),

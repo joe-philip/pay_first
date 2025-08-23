@@ -2,12 +2,22 @@ from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import View
 
+from .models import ContactGroup, Contacts
+
 
 class IsContactGroupOwner(BasePermission):
     """
     Custom permission to only allow owners of a contact group to access it.
     """
 
-    def has_object_permission(self, request: Request, view: View, obj) -> bool:
+    def has_object_permission(self, request: Request, view: View, obj: ContactGroup) -> bool:
         # Check if the user is the owner of the contact group
+        return obj.owner == request.user
+
+
+class IsContactOwner(BasePermission):
+    """
+    Custom permission to only allow owners of a Contacts object to access or modify it.
+    """
+    def has_object_permission(self, request: Request, view: View, obj: Contacts) -> bool:
         return obj.owner == request.user
