@@ -57,11 +57,14 @@ class Contacts(models.Model):
 
 class Transactions(models.Model):
     label = models.CharField()
-    contact = models.ForeignKey(Contacts, related_name="transactions")
+    contact = models.ForeignKey(
+        Contacts, related_name="transactions", on_delete=models.CASCADE
+    )
     _type = models.CharField(choices=TypeChoices.choices)
     amount = models.FloatField()
     description = models.TextField()
     return_date = models.DateTimeField(null=True)
+    date = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "transactions"
