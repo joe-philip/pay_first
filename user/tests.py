@@ -713,3 +713,24 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         response_data = response.data
         assert response.status_code == 201
         assert response_data.get("date")
+
+    def test_debit_transaction_create_withoud_date(self):
+        owner = self.token.user
+        contact = self.create_contact(owner=owner)
+        data = {
+            "label": DEFAULT_TRANSACTION_NAME,
+            "contact": contact.id,
+            "_type": TransactionTypeChoices.DEBIT.value,
+            "amount": 10,
+            "description": "",
+            "return_date": None
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        response_data = response.data
+        assert response.status_code == 201
+        assert response_data.get("date")
