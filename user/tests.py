@@ -1025,3 +1025,18 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 200
         assert response.data == []
+
+    # List API Test Cases End
+
+    # Retrieve API Test Cases Start
+
+    def test_credit_transaction_retrieve_success(self):
+        owner = self.token.user
+        contact = self.create_contact(owner=owner)
+        instance = self.create_credit_transaction(contact=contact)
+        response = self.client.get(
+            self.base_url + f"/{instance.id}/",
+            **self.headers
+        )
+        response.status_code == 200
+        assert response.data.get("id") == instance.id
