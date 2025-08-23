@@ -24,7 +24,7 @@ services:
       - .:/app
     ports:
       - "8000:8000"
-      - "5678:5678"  # Debugpy port
+      - "5678:5678" # Debugpy port
     depends_on:
       - db
     env_file:
@@ -33,6 +33,22 @@ services:
       - pay-first-network
     # Start debugpy for VS Code Python debugging
     entrypoint: ./entrypoint.sh
+  tests:
+    build: .
+    command: python -m pytest -v
+    volumes:
+      - .:/app
+    ports:
+      - "5679:5678" # Debugpy port
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+    networks:
+      - pay-first-network
+    # Start debugpy for VS Code Python debugging
+    entrypoint: ./entrypoint-test-cases.sh
 
 volumes:
   postgres_data:
