@@ -1142,3 +1142,11 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 204
         assert not ContactGroup.objects.filter(owner=owner).exists()
+
+    def test_transaction_delete_api_with_invalid_id(self):
+        response = self.client.delete(
+            self.base_url + "/0/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
