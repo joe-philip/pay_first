@@ -921,3 +921,22 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         errors = response.data
         assert response.status_code == 400
         assert "contact" in errors.get("error")
+
+    def test_debit_transaction_create_without_contact(self):
+        data = {
+            "label": DEFAULT_TRANSACTION_NAME,
+            "_type": TransactionTypeChoices.DEBIT.value,
+            "amount": 10,
+            "description": "",
+            "return_date": None,
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE)),
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        errors = response.data
+        assert response.status_code == 400
+        assert "contact" in errors.get("error")
