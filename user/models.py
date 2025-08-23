@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from user.choices import TypeChoices
+from user.choices import TransactionTypeChoices
 
 # Create your models here.
 
@@ -60,7 +60,7 @@ class Transactions(models.Model):
     contact = models.ForeignKey(
         Contacts, related_name="transactions", on_delete=models.CASCADE
     )
-    _type = models.CharField(choices=TypeChoices.choices)
+    _type = models.CharField(choices=TransactionTypeChoices.choices)
     amount = models.FloatField()
     description = models.TextField(blank=True)
     return_date = models.DateTimeField(null=True)
