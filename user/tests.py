@@ -1071,3 +1071,14 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
             **self.headers
         )
         assert response.status_code == 404
+
+    def test_transaction_retrieve_api_without_auth_token(self):
+        owner = self.token.user
+        contact = self.create_contact(owner=owner)
+        instance = self.create_debit_transaction(contact=contact)
+        response = self.client.get(
+            self.base_url + f"/{instance.id}/"
+        )
+        response.status_code == 401
+
+    # Retrieve API Test Cases End
