@@ -1105,3 +1105,26 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
             **self.headers
         )
         assert response.status_code == 200
+
+    def test_transaction_update_api_with_invalid_id(self):
+        owner = self.token.user
+        contact = self.create_contact(owner=owner)
+        self.create_debit_transaction(contact=contact)
+        data = {
+            "label": DEFAULT_TRANSACTION_NAME,
+            "contact": contact.id,
+            "_type": TransactionTypeChoices.DEBIT.value,
+            "amount": 10,
+            "description": "",
+            "return_date": None,
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE)),
+        }
+        response = self.client.put(
+            self.base_url + f"/0/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    # Update API Test Cases End
