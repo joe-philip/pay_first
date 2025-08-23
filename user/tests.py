@@ -1040,3 +1040,14 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         )
         response.status_code == 200
         assert response.data.get("id") == instance.id
+
+    def test_debit_transaction_retrieve_success(self):
+        owner = self.token.user
+        contact = self.create_contact(owner=owner)
+        instance = self.create_debit_transaction(contact=contact)
+        response = self.client.get(
+            self.base_url + f"/{instance.id}/",
+            **self.headers
+        )
+        response.status_code == 200
+        assert response.data.get("id") == instance.id
