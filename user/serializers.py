@@ -76,6 +76,19 @@ class ContactsSerializer(serializers.ModelSerializer):
 
 
 class TransactionsSerializer(serializers.ModelSerializer):
+    class RepaymentsSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Repayments
+            exclude = ("transaction",)
+    repayments = serializers.SerializerMethodField()
+    pending_amount = serializers.SerializerMethodField()
+
+    def get_repayments(self, instance: Transactions):
+        return self.RepaymentsSerializer(instance.repayments.all(), many=True).data
+
+    def get_pending_amount(self, instance: Transactions) -> float:
+        return instance.pending_amount
+
     class Meta:
         model = Transactions
         fields = '__all__'

@@ -68,6 +68,13 @@ class Transactions(models.Model):
     return_date = models.DateTimeField(null=True)
     date = models.DateTimeField(auto_now=True)
 
+    @property
+    def pending_amount(self) -> float:
+        paid_amount = sum(
+            self.repayments.all().values_list("amount", flat=True)
+        )
+        return self.amount - paid_amount
+
     class Meta:
         db_table = "transactions"
         verbose_name = "Transaction"
