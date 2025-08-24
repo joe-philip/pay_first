@@ -72,5 +72,20 @@ class Transactions(models.Model):
         db_table = "transactions"
         verbose_name = "Transaction"
 
-    def __str__(self) -> str:
-        return self.label
+    def __str__(self) -> str: return self.label
+
+
+class Repayments(models.Model):
+    label = models.CharField()
+    transaction = models.ForeignKey(
+        Transactions, related_name="repayments", on_delete=models.CASCADE
+    )
+    amount = models.FloatField()
+    remarks = models.TextField(blank=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "repayments"
+        verbose_name = "Repayment"
+
+    def __str__(self) -> str: return self.label
