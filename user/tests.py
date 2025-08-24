@@ -66,7 +66,7 @@ class MainTestsMixin(BasicTestsMixin):
         kwargs["transaction"] = kwargs.get(
             "transaction", self.create_credit_transaction()
         )
-        kwargs["amount"] = kwargs.get("amount", 10)
+        kwargs["amount"] = kwargs.get("amount", kwargs['transaction'].amount)
         kwargs["remarks"] = kwargs.get("remarks", "")
         if (repaymet := Repayments.objects.filter(**kwargs)).exists():
             return repaymet.first()
@@ -1173,3 +1173,18 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
             **self.headers
         )
         assert response.status_code == 404
+
+    # Delete API Test Cases End
+
+
+class RepaymentAPITestCase(APITestCase, MainTestsMixin):
+    def setUp(self):
+        self.base_url = "/user/repayment"
+        self.token = self.create_user_token()
+        contact = self.create_contact(owner=self.token.user)
+        self.credit_transaction = self.create_credit_transaction(
+            contact=contact
+        )
+        self.debit_transaction = self.create_debit_transaction(contact=contact)
+        self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
+        return super().setUp()
