@@ -68,9 +68,56 @@ class Transactions(models.Model):
     return_date = models.DateTimeField(null=True)
     date = models.DateTimeField(auto_now=True)
 
+    @property
+    def pending_amount(self) -> float:
+        paid_amount = sum(
+            self.repayments.all().values_list("amount", flat=True)
+        )
+        return self.amount - paid_amount
+
     class Meta:
         db_table = "transactions"
         verbose_name = "Transaction"
 
-    def __str__(self) -> str:
-        return self.label
+    def __str__(self) -> str: return self.label
+
+
+class Repayments(models.Model):
+    label = models.CharField()
+    transaction = models.ForeignKey(
+        Transactions, related_name="repayments", on_delete=models.CASCADE
+    )
+    amount = models.FloatField()
+    remarks = models.TextField(blank=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        total_paid_amount = sum(
+            Repayments.objects.filter(
+                transaction=self.transaction
+            ).exclude(id=self.id).values_list("amount", flat=True)
+        )
+        pending_amount = self.transaction.amount - total_paid_amount
+        if pending_amount == 0:
+            raise ValidationError(
+                {
+                    "amount": ["You do not have any amounts pending in this transaction"]
+                }
+            )
+        if self.amount > pending_amount:
+            raise ValidationError(
+                {
+                    "amount": [f"The amount you entered exceeds the pending amount of {pending_amount}"]
+                }
+            )
+        return super().clean()
+
+    class Meta:
+        db_table = "repayments"
+        verbose_name = "Repayment"
+
+    def __str__(self) -> str: return self.label
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)

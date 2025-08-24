@@ -3,7 +3,7 @@ from collections import OrderedDict
 from django.db.models import QuerySet
 from rest_framework import serializers
 
-from .models import ContactGroup, Contacts, Transactions
+from .models import ContactGroup, Contacts, Repayments, Transactions
 
 
 class ContactGroupSerializer(serializers.ModelSerializer):
@@ -76,6 +76,25 @@ class ContactsSerializer(serializers.ModelSerializer):
 
 
 class TransactionsSerializer(serializers.ModelSerializer):
+    class RepaymentsSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Repayments
+            exclude = ("transaction",)
+    repayments = serializers.SerializerMethodField()
+    pending_amount = serializers.SerializerMethodField()
+
+    def get_repayments(self, instance: Transactions):
+        return self.RepaymentsSerializer(instance.repayments.all(), many=True).data
+
+    def get_pending_amount(self, instance: Transactions) -> float:
+        return instance.pending_amount
+
     class Meta:
         model = Transactions
+        fields = '__all__'
+
+
+class RepaymentsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Repayments
         fields = '__all__'

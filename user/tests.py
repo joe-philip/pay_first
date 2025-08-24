@@ -6,7 +6,7 @@ from rest_framework.test import APITestCase
 from main.tests import BasicTestsMixin
 
 from .choices import TransactionTypeChoices
-from .models import ContactGroup, Contacts, Transactions
+from .models import ContactGroup, Contacts, Repayments, Transactions
 
 # Create your tests here.
 
@@ -17,6 +17,7 @@ DEFAULT_TRANSACTION_NAME = "Test Transaction"
 DEFAULT_CREDIT_TRANSACTION_NAME = "Test Credit Transaction"
 DEFAULT_DEBIT_TRANSACTION_NAME = "Test Debit Transaction"
 DEFAULT_TIMEZONE = timezone("Asia/Calcutta")
+DEFAULT_REPAYMET_LABEL = "Test Repayment"
 
 
 class MainTestsMixin(BasicTestsMixin):
@@ -59,6 +60,17 @@ class MainTestsMixin(BasicTestsMixin):
 
     def create_credit_transaction(self, **kwargs) -> Transactions:
         return self.create_transaction(_type=TransactionTypeChoices.CREDIT.value, **kwargs)
+
+    def create_repayment(self, **kwargs) -> Repayments:
+        kwargs["label"] = kwargs.get("label", DEFAULT_REPAYMET_LABEL)
+        kwargs["transaction"] = kwargs.get(
+            "transaction", self.create_credit_transaction()
+        )
+        kwargs["amount"] = kwargs.get("amount", kwargs['transaction'].amount)
+        kwargs["remarks"] = kwargs.get("remarks", "")
+        if (repaymet := Repayments.objects.filter(**kwargs)).exists():
+            return repaymet.first()
+        return Repayments.objects.create(**kwargs)
 
 
 class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
@@ -1161,3 +1173,300 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
             **self.headers
         )
         assert response.status_code == 404
+
+    # Delete API Test Cases End
+
+
+class RepaymentAPITestCase(APITestCase, MainTestsMixin):
+    def setUp(self):
+        self.base_url = "/user/repayment"
+        self.token = self.create_user_token()
+        contact = self.create_contact(owner=self.token.user)
+        self.credit_transaction = self.create_credit_transaction(
+            contact=contact
+        )
+        self.debit_transaction = self.create_debit_transaction(contact=contact)
+        self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
+        return super().setUp()
+
+    # Create API Test Cases Start
+
+    def test_create_repayment_success(self):
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "amount": 5,
+            "transaction": self.credit_transaction.id,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+        assert response.data["label"] == data.get("label")
+
+    def test_create_repayment_with_amount_equal_to_transaction_amount(self):
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "amount": self.credit_transaction.amount,
+            "transaction": self.credit_transaction.id,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+        assert response.data["label"] == data.get("label")
+
+    def test_create_repayment_with_amount_greater_than_transaction_amount(self):
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "amount": self.credit_transaction.amount + 1,
+            "transaction": self.credit_transaction.id,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        errors = response.data
+        assert response.status_code == 400
+        assert "amount" in errors.get("error")
+
+    def test_create_repayment_without_date(self):
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "amount": 5,
+            "transaction": self.credit_transaction.id,
+            "remarks": ""
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+        assert response.data["date"]
+
+    def test_create_repayment_without_remarks(self):
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "amount": 5,
+            "transaction": self.credit_transaction.id,
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+
+    def test_create_repayment_without_transaction(self):
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "amount": 5,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        errors = response.data
+        assert response.status_code == 400
+        assert "transaction" in errors.get("error")
+
+    def test_create_repayment_without_amount(self):
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "transaction": self.credit_transaction.id,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        errors = response.data
+        assert response.status_code == 400
+        assert "amount" in errors.get("error")
+
+    def test_create_repayment_without_label(self):
+        data = {
+            "amount": 5,
+            "transaction": self.credit_transaction.id,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        errors = response.data
+        assert response.status_code == 400
+        assert "label" in errors.get("error")
+
+    def test_create_repayment_without_payload(self):
+        response = self.client.post(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+
+    # Create API Test Cases End
+
+    # List API Test Cases Start
+
+    def test_list_repayment_success(self):
+        self.create_repayment()
+        response = self.client.get(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+
+    def test_list_repayment_empty(self):
+        response = self.client.get(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data == []
+
+    # List API Test Cases End
+
+    # Retrieve API Test Cases Start
+
+    def test_retrieve_repayment_success(self):
+        instance = self.create_repayment()
+        response = self.client.get(
+            self.base_url + f"/{instance.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data.get("id") == instance.id
+
+    def test_retrieve_repayment_with_invalid_pk(self):
+        self.create_repayment()
+        response = self.client.get(
+            self.base_url + "/0/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    # Retrieve API Test Cases End
+
+    # Update API Test Cases Start
+
+    def test_update_repayment_success(self):
+        instance = self.create_repayment()
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "amount": 5,
+            "transaction": self.credit_transaction.id,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.put(
+            self.base_url + f"/{instance.id}/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data["label"] == data.get("label")
+
+    def test_update_repayment_with_amount_equal_to_transaction_amount(self):
+        instance = self.create_repayment()
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "amount": self.credit_transaction.amount,
+            "transaction": self.credit_transaction.id,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.put(
+            self.base_url + f"/{instance.id}/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data["label"] == data.get("label")
+
+    def test_update_repayment_with_amount_greater_than_transaction_amount(self):
+        instance = self.create_repayment()
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "amount": self.credit_transaction.amount + 1,
+            "transaction": self.credit_transaction.id,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.put(
+            self.base_url + f"/{instance.id}/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        errors = response.data
+        assert response.status_code == 400
+        assert "amount" in errors.get("error")
+
+    def test_update_repayment_without_payload(self):
+        instance = self.create_repayment()
+        response = self.client.put(
+            self.base_url + f"/{instance.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+
+    # Update API Test Cases End
+
+    # Delete API Test Cases Start
+
+    def test_transaction_delete_success(self):
+        instance = self.create_repayment()
+        response = self.client.delete(
+            self.base_url + f"/{instance.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 204
+        assert not Repayments.objects.filter(id=instance.id).exists()
+
+    def test_transaction_delete_invalid_pk(self):
+        response = self.client.delete(
+            self.base_url + "/0/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    # Delete API Test Cases Start
