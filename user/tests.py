@@ -1369,3 +1369,14 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 200
         assert response.data.get("id") == instance.id
+
+    def test_retrieve_repayment_with_invalid_pk(self):
+        self.create_repayment()
+        response = self.client.get(
+            self.base_url + "/0/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    # Retrieve API Test Cases End
