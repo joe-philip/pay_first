@@ -16,6 +16,10 @@
     #!/bin/sh
     python manage.py runserver 0.0.0.0:8000
     ```
+    `enrtypoint.sh` should be executable, make it executable by running:
+    ```bash
+    sudo chmod +x enrtypoint.sh
+    ```
 3. Start the app with:
 
    ```bash
