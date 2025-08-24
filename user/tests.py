@@ -1307,3 +1307,20 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         errors = response.data
         assert response.status_code == 400
         assert "amount" in errors.get("error")
+
+    def test_create_repayment_without_label(self):
+        data = {
+            "amount": 5,
+            "transaction": self.credit_transaction.id,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        errors = response.data
+        assert response.status_code == 400
+        assert "label" in errors.get("error")
