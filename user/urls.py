@@ -17,6 +17,10 @@ router.register(
     r"transaction", views.TransactionsViewSet,
     basename="transaction"
 )
+router.register(
+    r"repayment", views.RepymentsViewSet,
+    basename="repayment"
+)
 
 urlpatterns = [
     path("", include(router.urls)),
