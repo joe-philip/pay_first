@@ -1437,3 +1437,14 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         errors = response.data
         assert response.status_code == 400
         assert "amount" in errors.get("error")
+
+    def test_update_repayment_without_payload(self):
+        instance = self.create_repayment()
+        response = self.client.put(
+            self.base_url + f"/{instance.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+
+    # Update API Test Cases End
