@@ -1346,3 +1346,12 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 200
         assert len(response.data) == 1
+
+    def test_list_repayment_empty(self):
+        response = self.client.get(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data == []
