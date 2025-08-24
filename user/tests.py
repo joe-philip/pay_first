@@ -1324,3 +1324,13 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         errors = response.data
         assert response.status_code == 400
         assert "label" in errors.get("error")
+
+    def test_create_repayment_without_payload(self):
+        response = self.client.post(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+
+    # Create API Test Cases End
