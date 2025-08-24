@@ -91,8 +91,33 @@ class Repayments(models.Model):
     remarks = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True)
 
+    def clean(self):
+        total_paid_amount = sum(
+            Repayments.objects.filter(
+                transaction=self.transaction
+            ).exclude(id=self.id).values_list("amount", flat=True)
+        )
+        pending_amount = self.transaction.amount - total_paid_amount
+        if pending_amount == 0:
+            raise ValidationError(
+                {
+                    "amount": ["You do not have any amounts pending in this transaction"]
+                }
+            )
+        if self.amount > pending_amount:
+            raise ValidationError(
+                {
+                    "amount": [f"The amount you entered exceeds the pending amount of {pending_amount}"]
+                }
+            )
+        return super().clean()
+
     class Meta:
         db_table = "repayments"
         verbose_name = "Repayment"
 
     def __str__(self) -> str: return self.label
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
