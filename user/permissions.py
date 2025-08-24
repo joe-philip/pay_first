@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import View
 
-from .models import ContactGroup, Contacts, Transactions
+from .models import ContactGroup, Contacts, Repayments, Transactions
 
 
 class IsContactGroupOwner(BasePermission):
@@ -31,5 +31,11 @@ class IsOwnTransaction(BasePermission):
     Methods:
         has_object_permission(request, view, obj): Returns True if the user making the request is the owner of the contact related to the transaction object.
     """
+
     def has_object_permission(self, request: Request, view: View, obj: Transactions) -> bool:
         return obj.contact.owner == request.user
+
+
+class IsOwnRepayment(BasePermission):
+    def has_object_permission(self, request: Request, view: View, obj: Repayments) -> bool:
+        return obj.transaction.contact.owner == request.user
