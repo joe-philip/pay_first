@@ -1448,3 +1448,25 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 400
 
     # Update API Test Cases End
+
+    # Delete API Test Cases Start
+
+    def test_transaction_delete_success(self):
+        instance = self.create_repayment()
+        response = self.client.delete(
+            self.base_url + f"/{instance.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 204
+        assert not Repayments.objects.filter(id=instance.id).exists()
+
+    def test_transaction_delete_invalid_pk(self):
+        response = self.client.delete(
+            self.base_url + "/0/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    # Delete API Test Cases Start
