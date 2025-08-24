@@ -6,7 +6,7 @@ from rest_framework.test import APITestCase
 from main.tests import BasicTestsMixin
 
 from .choices import TransactionTypeChoices
-from .models import ContactGroup, Contacts, Transactions
+from .models import ContactGroup, Contacts, Repayments, Transactions
 
 # Create your tests here.
 
@@ -17,6 +17,7 @@ DEFAULT_TRANSACTION_NAME = "Test Transaction"
 DEFAULT_CREDIT_TRANSACTION_NAME = "Test Credit Transaction"
 DEFAULT_DEBIT_TRANSACTION_NAME = "Test Debit Transaction"
 DEFAULT_TIMEZONE = timezone("Asia/Calcutta")
+DEFAULT_REPAYMET_LABEL = "Test Repayment"
 
 
 class MainTestsMixin(BasicTestsMixin):
@@ -59,6 +60,17 @@ class MainTestsMixin(BasicTestsMixin):
 
     def create_credit_transaction(self, **kwargs) -> Transactions:
         return self.create_transaction(_type=TransactionTypeChoices.CREDIT.value, **kwargs)
+
+    def create_repayment(self, **kwargs) -> Repayments:
+        kwargs["label"] = kwargs.get("label", DEFAULT_REPAYMET_LABEL)
+        kwargs["transaction"] = kwargs.get(
+            "transaction", self.create_credit_transaction()
+        )
+        kwargs["amount"] = kwargs.get("amount", 10)
+        kwargs["remarks"] = kwargs.get("remarks", "")
+        if (repaymet := Repayments.objects.filter(**kwargs)).exists():
+            return repaymet.first()
+        return Repayments.objects.create(**kwargs)
 
 
 class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
