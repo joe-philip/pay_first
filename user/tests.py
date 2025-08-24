@@ -1355,3 +1355,17 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 200
         assert response.data == []
+
+    # List API Test Cases End
+
+    # Retrieve API Test Cases Start
+
+    def test_retrieve_repayment_success(self):
+        instance = self.create_repayment()
+        response = self.client.get(
+            self.base_url + f"/{instance.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data.get("id") == instance.id
