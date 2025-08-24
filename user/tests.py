@@ -1188,3 +1188,22 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         self.debit_transaction = self.create_debit_transaction(contact=contact)
         self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
         return super().setUp()
+
+    # Create API Test Cases Start
+
+    def test_create_repayment_success(self):
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "amount": 5,
+            "transaction": self.credit_transaction.id,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+        assert response.data["label"] == data.get("label")
