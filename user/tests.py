@@ -1400,3 +1400,21 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 200
         assert response.data["label"] == data.get("label")
+
+    def test_update_repayment_with_amount_equal_to_transaction_amount(self):
+        instance = self.create_repayment()
+        data = {
+            "label": DEFAULT_REPAYMET_LABEL,
+            "amount": self.credit_transaction.amount,
+            "transaction": self.credit_transaction.id,
+            "remarks": "",
+            "date": str(datetime.now(tz=DEFAULT_TIMEZONE))
+        }
+        response = self.client.put(
+            self.base_url + f"/{instance.id}/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data["label"] == data.get("label")
