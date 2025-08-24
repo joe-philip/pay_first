@@ -3,7 +3,7 @@ from collections import OrderedDict
 from django.db.models import QuerySet
 from rest_framework import serializers
 
-from .models import ContactGroup, Contacts, Transactions
+from .models import ContactGroup, Contacts, Repayments, Transactions
 
 
 class ContactGroupSerializer(serializers.ModelSerializer):
@@ -78,4 +78,10 @@ class ContactsSerializer(serializers.ModelSerializer):
 class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transactions
+        fields = '__all__'
+
+
+class RepaymentsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Repayments
         fields = '__all__'
