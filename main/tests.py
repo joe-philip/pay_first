@@ -1,12 +1,14 @@
+from pytz import timezone
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
-
+from django.conf import settings
 # Create your tests here.
 
 # Constants for default user credentials
 DEFAULT_PASSWORD = "Paword*1"  # Password of length 8
 DEFAULT_USERNAME = "tester@payfirst.com"
+DEFAULT_TIMEZONE = timezone(settings.TIME_ZONE)
 
 
 class BasicTestsMixin:
@@ -357,6 +359,16 @@ class LogoutAPITestCase(APITestCase, BasicTestsMixin):
             response.status_code == 401
         ), "Expected status code 401 for unauthorized access"
         assert "error" in response.data, "Expected 'error' field in error response"
+
+    def test_token_expiry(self):
+        """
+        Tests that an expired authentication token results in a 401 Unauthorized response
+        when attempting to access the protected endpoint via DELETE request.
+        """
+        token = self.token
+        token.created = token.created-settings.AUTH_TOKEN_EXPIRY
+        response = self.client.delete(self.BASE_URL)
+        assert response.status_code == 401
 
 
 class ChangePasswordAPITestCase(APITestCase, BasicTestsMixin):

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -141,6 +142,13 @@ REST_FRAMEWORK = {
         'root.utils.renderers.JSONRenderer'
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        "rest_framework.authentication.TokenAuthentication"
+        "root.utils.authentication.ExpiringTokenAuthentication"
     ]
 }
+
+AUTH_TOKEN_EXPIRY = timedelta(
+    seconds=int(os.environ.get("AUTH_TOKEN_EXPIRY_SECONDS", 0)),
+    minutes=int(os.environ.get("AUTH_TOKEN_EXPIRY_MINUTES", 0)),
+    hours=int(os.environ.get("AUTH_TOKEN_EXPIRY_HOURS", 0)),
+    days=int(os.environ.get("AUTH_TOKEN_EXPIRY_DAYS", 0))
+)
