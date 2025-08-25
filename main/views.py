@@ -1,12 +1,19 @@
+from datetime import datetime
+
 from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 
-from .serializers import (ChangePasswordSerializer, SignupAPISerializer,
-                          UserProfileSerializer)
+from main.utils import is_auth_token_expired
+
+from .serializers import (ChangePasswordSerializer, LoginSerializer,
+                          SignupAPISerializer, UserProfileSerializer)
 
 # Create your views here.
 
@@ -16,7 +23,24 @@ class SignupAPIView(APIView):
         serializer = SignupAPISerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)
+        return Response(serializer.data, status=201)
+
+
+class LoginAPIView(ObtainAuthToken):
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+    serializer_class = LoginSerializer
+
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        if not created:
+            if is_auth_token_expired(token):
+                token.delete()
+                token = Token.objects.create(user=user)
+        user.last_login = datetime.now()
+        return Response({'token': token.key})
 
 
 class LogoutAPIView(APIView):

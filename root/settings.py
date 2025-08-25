@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -21,7 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-pvl*_ypzk)2bzhl77u2y$q801vus)+r6xik3+@f&frn3s-$^_f"
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", "django-insecure-pvl*_ypzk)2bzhl77u2y$q801vus)+r6xik3+@f&frn3s-$^f"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('DEBUG', True))
@@ -40,7 +43,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'rest_framework',
     "rest_framework.authtoken",
-    "main"
+    "main",
+    "user"
 ]
 
 MIDDLEWARE = [
@@ -97,6 +101,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        'OPTIONS': {
+            'min_length': 8
+        }
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -135,6 +142,13 @@ REST_FRAMEWORK = {
         'root.utils.renderers.JSONRenderer'
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        "rest_framework.authentication.TokenAuthentication"
+        "root.utils.authentication.ExpiringTokenAuthentication"
     ]
 }
+
+AUTH_TOKEN_EXPIRY = timedelta(
+    seconds=int(os.environ.get("AUTH_TOKEN_EXPIRY_SECONDS", 0)),
+    minutes=int(os.environ.get("AUTH_TOKEN_EXPIRY_MINUTES", 0)),
+    hours=int(os.environ.get("AUTH_TOKEN_EXPIRY_HOURS", 0)),
+    days=int(os.environ.get("AUTH_TOKEN_EXPIRY_DAYS", 0))
+)

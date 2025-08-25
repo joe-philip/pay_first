@@ -1,3 +1,5 @@
+from django.core.exceptions import ValidationError
+from django.http.response import Http404
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 
@@ -17,4 +19,8 @@ def exception_handler(exc: Exception, context: dict):
     """
     if isinstance(exc, APIException):
         return Response(fail(exc.detail), status=exc.status_code)
+    elif isinstance(exc, Http404):
+        return Response(fail(str(exc)), status=404)
+    elif isinstance(exc, ValidationError):
+        return Response(fail(getattr(exc, "message_dict", {})), status=400)
     return Response(fail(str(exc)), status=500)
