@@ -51,6 +51,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Create test database
+      run: |
+        PGPASSWORD=postgres psql -h localhost -U postgres -d postgres -c "CREATE DATABASE test_db;"
+
     - name: Run Migrations
       run: python manage.py migrate
 
