@@ -44,7 +44,7 @@ jobs:
           if [[ ! "$line" =~ ^# && -n "$line" ]]; then
             echo "$line" >> $GITHUB_ENV
           fi
-        done < ./.env
+        done < .github/workflows/.env
 
     - name: Install Dependencies
       run: |
