@@ -142,7 +142,7 @@ REST_FRAMEWORK = {
         'root.utils.renderers.JSONRenderer'
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        "rest_framework.authentication.TokenAuthentication"
+        "root.utils.authentication.ExpiringTokenAuthentication"
     ]
 }
 
