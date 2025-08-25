@@ -60,7 +60,7 @@ jobs:
         POSTGRES_DB: test_db
         POSTGRES_USER: postgres
         DB_PORT: 5432
-        DB_HOST: postgres
+        DB_HOST: 127.0.0.1
       run: python manage.py migrate
 
     - name: Run Tests
