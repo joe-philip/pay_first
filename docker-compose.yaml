@@ -3,10 +3,6 @@ version: "3.9"
 services:
   db:
     image: postgres:16
-    environment:
-      POSTGRES_DB: mydb
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
     env_file:
       - ./.env
     volumes:
@@ -19,27 +15,26 @@ services:
   web:
     image: pay-first-web-app
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
       - "8000:8000"
-      - "5678:5678" # Debugpy port
+      - "5678:5678"
     depends_on:
       - db
     env_file:
       - ./.env
     networks:
       - pay-first-network
-    # Start debugpy for VS Code Python debugging
-    entrypoint: ./entrypoint.sh
+
   tests:
     build: .
-    command: python -m pytest -v
+    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m pytest -v
     volumes:
       - .:/app
     ports:
-      - "5679:5678" # Debugpy port
+      - "5679:5678"
     restart: always
     depends_on:
       - db
@@ -47,11 +42,8 @@ services:
       - ./.env
     networks:
       - pay-first-network
-    # Start debugpy for VS Code Python debugging
-    entrypoint: ./entrypoint-test-cases.sh
 
 volumes:
   postgres_data:
 networks:
   pay-first-network:
-    external: true
