@@ -154,3 +154,10 @@ AUTH_TOKEN_EXPIRY = timedelta(
     hours=int(os.environ.get("AUTH_TOKEN_EXPIRY_HOURS", 0)),
     days=int(os.environ.get("AUTH_TOKEN_EXPIRY_DAYS", 0))
 )
+
+
+# Django Cors Headers
+# https://pypi.org/project/django-cors-headers/
+
+CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+CORS_ALLOW_ALL_ORIGINS = bool(os.environ.get("CORS_ALLOW_ALL_ORIGINS"))
