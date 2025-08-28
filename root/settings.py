@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'rest_framework',
     "rest_framework.authtoken",
+    "corsheaders",
     "main",
     "user"
 ]
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -152,3 +154,10 @@ AUTH_TOKEN_EXPIRY = timedelta(
     hours=int(os.environ.get("AUTH_TOKEN_EXPIRY_HOURS", 0)),
     days=int(os.environ.get("AUTH_TOKEN_EXPIRY_DAYS", 0))
 )
+
+
+# Django Cors Headers
+# https://pypi.org/project/django-cors-headers/
+
+CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+CORS_ALLOW_ALL_ORIGINS = bool(os.environ.get("CORS_ALLOW_ALL_ORIGINS"))
