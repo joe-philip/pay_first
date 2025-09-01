@@ -14,6 +14,7 @@ from .serializers import (ContactGroupSerializer, ContactsSerializer,
 class ContactGroupViewSet(ModelViewSet):
     serializer_class = ContactGroupSerializer
     permission_classes = (IsAuthenticated, IsContactGroupOwner)
+    search_fields = ("name", "subgroups__name")
 
     def get_queryset(self) -> QuerySet[ContactGroup]:
         queryset = ContactGroup.objects.filter(owner=self.request.user)
