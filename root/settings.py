@@ -139,13 +139,15 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'root.utils.exception_handlers.exception_handler',
-    'DEFAULT_RENDERER_CLASSES': [
-        'root.utils.renderers.JSONRenderer'
+    "EXCEPTION_HANDLER": "root.utils.exception_handlers.exception_handler",
+    "DEFAULT_RENDERER_CLASSES": [
+        "root.utils.renderers.JSONRenderer"
     ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
+    "DEFAULT_AUTHENTICATION_CLASSES": [
         "root.utils.authentication.ExpiringTokenAuthentication"
-    ]
+    ],
+    "DEFAULT_FILTER_BACKENDS": ["rest_framework.filters.SearchFilter"],
+    "SEARCH_PARAM": "search"
 }
 
 AUTH_TOKEN_EXPIRY = timedelta(
