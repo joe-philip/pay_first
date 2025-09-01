@@ -3,9 +3,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
 from .models import ContactGroup, Contacts, Repayments, Transactions
-from .permissions import IsContactGroupOwner, IsContactOwner, IsOwnRepayment, IsOwnTransaction
-from .serializers import (ContactGroupSerializer, ContactsSerializer, RepaymentsSerializer,
-                          TransactionsSerializer)
+from .permissions import (IsContactGroupOwner, IsContactOwner, IsOwnRepayment,
+                          IsOwnTransaction)
+from .serializers import (ContactGroupSerializer, ContactsSerializer,
+                          RepaymentsSerializer, TransactionsSerializer)
 
 # Create your views here.
 
