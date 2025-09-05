@@ -189,6 +189,51 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 200
         assert len(response.data) == 1
 
+    def test_contact_group_search_name_functionality(self):
+        # Create multiple contact groups
+        self.create_contact_group(name="Alpha Group")
+        self.create_contact_group(name="Beta Group")
+        self.create_contact_group(name="Gamma Group")
+        # Search for 'Beta'
+        response = self.client.get(
+            self.base_url + "/?search=Beta",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        # Should only return the group with 'Beta' in the name
+        assert len(response.data) == 1
+
+    def test_contact_group_case_insensitivity_search_name_functionality(self):
+        # Create multiple contact groups
+        self.create_contact_group(name="Alpha Group")
+        self.create_contact_group(name="Beta Group")
+        self.create_contact_group(name="Gamma Group")
+        # Search for 'beta'
+        response = self.client.get(
+            self.base_url + "/?search=beta",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        # Should only return the group with 'Beta' in the name
+        assert len(response.data) == 1
+
+    def test_contact_group_search_name_with_invalid_name_functionality(self):
+        # Create multiple contact groups
+        self.create_contact_group(name="Alpha Group")
+        self.create_contact_group(name="Beta Group")
+        self.create_contact_group(name="Gamma Group")
+        # Search for 'Beta'
+        response = self.client.get(
+            self.base_url + "/?search=invalid",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        # Should only return the group with 'Beta' in the name
+        assert response.data == []
+
     def test_contact_group_list_with_empty_data(self):
         response = self.client.get(
             self.base_url + "/",
