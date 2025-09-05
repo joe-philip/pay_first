@@ -35,6 +35,7 @@ class ContactsViewSet(ModelViewSet):
 class TransactionsViewSet(ModelViewSet):
     serializer_class = TransactionsSerializer
     permission_classes = (IsAuthenticated, IsOwnTransaction)
+    search_fields = ("label", "contact__name")
 
     def get_queryset(self) -> QuerySet[Transactions]:
         return Transactions.objects.filter(contact__owner=self.request.user)

@@ -1159,6 +1159,60 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 200
         assert len(response.data) == 2
 
+    def test_transaction_search_with_label(self):
+        contact = self.create_contact(owner=self.token.user)
+        self.create_credit_transaction(contact=contact, label="Alpha Transaction")
+        self.create_debit_transaction(contact=contact, label="Beta Transaction")
+        response = self.client.get(
+            self.base_url + "/?search=Beta Transaction",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["label"] == "Beta Transaction"
+
+    def test_transaction_case_insensitive_search_with_label(self):
+        contact = self.create_contact(owner=self.token.user)
+        self.create_credit_transaction(contact=contact, label="Alpha Transaction")
+        self.create_debit_transaction(contact=contact, label="Beta Transaction")
+        response = self.client.get(
+            self.base_url + "/?search=beta transaction",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["label"] == "Beta Transaction"
+
+    def test_transaction_search_with_contact_name(self):
+        contact_alpha = self.create_contact(owner=self.token.user, name="Alpha Contact")
+        contact_beta = self.create_contact(owner=self.token.user, name="Beta Contact")
+        self.create_credit_transaction(contact=contact_alpha, label="Alpha Transaction")
+        self.create_debit_transaction(contact=contact_beta, label="Beta Transaction")
+        response = self.client.get(
+            self.base_url + "/?search=Beta Contact",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["contact"] == contact_beta.id
+
+    def test_transaction_case_insensitive_search_with_contact_name(self):
+        contact_alpha = self.create_contact(owner=self.token.user, name="Alpha Contact")
+        contact_beta = self.create_contact(owner=self.token.user, name="Beta Contact")
+        self.create_credit_transaction(contact=contact_alpha, label="Alpha Transaction")
+        self.create_debit_transaction(contact=contact_beta, label="Beta Transaction")
+        response = self.client.get(
+            self.base_url + "/?search=beta contact",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["contact"] == contact_beta.id
+
     def test_transaction_list_with_empty_data(self):
         response = self.client.get(
             self.base_url + "/",
