@@ -39,7 +39,7 @@ class MainTestsMixin(BasicTestsMixin):
             return contact.first()
         contact = Contacts.objects.create(**kwargs)
         if groups:
-            contact.groups.add(groups)
+            contact.groups.add(*groups)
             contact.save()
         return contact
 
@@ -448,6 +448,8 @@ class ContactsAPITestCase(APITestCase, MainTestsMixin):
         self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
         return super().setUp()
 
+    # Create API Test cases start
+
     def test_contact_create_success(self):
         contact_group = self.create_contact_group()
         owner = self.token.user
@@ -522,7 +524,6 @@ class ContactsAPITestCase(APITestCase, MainTestsMixin):
             content_type="application/json",
             **self.headers
         )
-        response_data = response.json()
         assert response.status_code == 201
 
     def test_contact_create_with_already_existing_contact_name_from_other_owner(self):
@@ -563,6 +564,90 @@ class ContactsAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 200
         assert response.data == []
+
+    def test_contact_search_with_name_functionality(self):
+        # Create contacts with different names
+        self.create_contact(owner=self.token.user, name="Alice")
+        self.create_contact(owner=self.token.user, name="Bob")
+        self.create_contact(owner=self.token.user, name="Charlie")
+        # Search for 'Bob'
+        response = self.client.get(
+            self.base_url + "/?search=Bob",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["name"] == "Bob"
+
+    def test_contact_search_with_group_name_functionality(self):
+        # Create groups
+        group_alpha = self.create_contact_group(
+            name="Alpha Group", owner=self.token.user
+        )
+        group_beta = self.create_contact_group(
+            name="Beta Group", owner=self.token.user
+        )
+        # Create contacts in different groups
+        self.create_contact(
+            owner=self.token.user,
+            name="Alice", groups=[group_alpha]
+        )
+        self.create_contact(
+            owner=self.token.user,
+            name="Bob", groups=[group_beta]
+        )
+        # Search for contacts in 'Beta Group'
+        response = self.client.get(
+            self.base_url + "/?search=Beta Group",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["name"] == "Bob"
+
+    def test_contact_case_insensitive_search_with_name_functionality(self):
+        # Create contacts with different names
+        self.create_contact(owner=self.token.user, name="Alice")
+        self.create_contact(owner=self.token.user, name="Bob")
+        self.create_contact(owner=self.token.user, name="Charlie")
+        # Search for 'Bob'
+        response = self.client.get(
+            self.base_url + "/?search=bob",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["name"] == "Bob"
+
+    def test_contact_case_insensitive_search_with_group_name_functionality(self):
+        # Create groups
+        group_alpha = self.create_contact_group(
+            name="Alpha Group", owner=self.token.user
+        )
+        group_beta = self.create_contact_group(
+            name="Beta Group", owner=self.token.user
+        )
+        # Create contacts in different groups
+        self.create_contact(
+            owner=self.token.user,
+            name="Alice", groups=[group_alpha]
+        )
+        self.create_contact(
+            owner=self.token.user,
+            name="Bob", groups=[group_beta]
+        )
+        # Search for contacts in 'Beta Group'
+        response = self.client.get(
+            self.base_url + "/?search=beta group",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["name"] == "Bob"
 
     def test_contact_group_list_without_auth_token(self):
         self.create_contact(owner=self.token.user)
