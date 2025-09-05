@@ -39,7 +39,7 @@ class MainTestsMixin(BasicTestsMixin):
             return contact.first()
         contact = Contacts.objects.create(**kwargs)
         if groups:
-            contact.groups.add(groups)
+            contact.groups.add(*groups)
             contact.save()
         return contact
 
@@ -188,6 +188,51 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 200
         assert len(response.data) == 1
+
+    def test_contact_group_search_name_functionality(self):
+        # Create multiple contact groups
+        self.create_contact_group(name="Alpha Group")
+        self.create_contact_group(name="Beta Group")
+        self.create_contact_group(name="Gamma Group")
+        # Search for 'Beta'
+        response = self.client.get(
+            self.base_url + "/?search=Beta",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        # Should only return the group with 'Beta' in the name
+        assert len(response.data) == 1
+
+    def test_contact_group_case_insensitivity_search_name_functionality(self):
+        # Create multiple contact groups
+        self.create_contact_group(name="Alpha Group")
+        self.create_contact_group(name="Beta Group")
+        self.create_contact_group(name="Gamma Group")
+        # Search for 'beta'
+        response = self.client.get(
+            self.base_url + "/?search=beta",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        # Should only return the group with 'Beta' in the name
+        assert len(response.data) == 1
+
+    def test_contact_group_search_name_with_invalid_name_functionality(self):
+        # Create multiple contact groups
+        self.create_contact_group(name="Alpha Group")
+        self.create_contact_group(name="Beta Group")
+        self.create_contact_group(name="Gamma Group")
+        # Search for 'Beta'
+        response = self.client.get(
+            self.base_url + "/?search=invalid",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        # Should only return the group with 'Beta' in the name
+        assert response.data == []
 
     def test_contact_group_list_with_empty_data(self):
         response = self.client.get(
@@ -403,6 +448,8 @@ class ContactsAPITestCase(APITestCase, MainTestsMixin):
         self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
         return super().setUp()
 
+    # Create API Test cases start
+
     def test_contact_create_success(self):
         contact_group = self.create_contact_group()
         owner = self.token.user
@@ -477,7 +524,6 @@ class ContactsAPITestCase(APITestCase, MainTestsMixin):
             content_type="application/json",
             **self.headers
         )
-        response_data = response.json()
         assert response.status_code == 201
 
     def test_contact_create_with_already_existing_contact_name_from_other_owner(self):
@@ -518,6 +564,90 @@ class ContactsAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 200
         assert response.data == []
+
+    def test_contact_search_with_name_functionality(self):
+        # Create contacts with different names
+        self.create_contact(owner=self.token.user, name="Alice")
+        self.create_contact(owner=self.token.user, name="Bob")
+        self.create_contact(owner=self.token.user, name="Charlie")
+        # Search for 'Bob'
+        response = self.client.get(
+            self.base_url + "/?search=Bob",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["name"] == "Bob"
+
+    def test_contact_search_with_group_name_functionality(self):
+        # Create groups
+        group_alpha = self.create_contact_group(
+            name="Alpha Group", owner=self.token.user
+        )
+        group_beta = self.create_contact_group(
+            name="Beta Group", owner=self.token.user
+        )
+        # Create contacts in different groups
+        self.create_contact(
+            owner=self.token.user,
+            name="Alice", groups=[group_alpha]
+        )
+        self.create_contact(
+            owner=self.token.user,
+            name="Bob", groups=[group_beta]
+        )
+        # Search for contacts in 'Beta Group'
+        response = self.client.get(
+            self.base_url + "/?search=Beta Group",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["name"] == "Bob"
+
+    def test_contact_case_insensitive_search_with_name_functionality(self):
+        # Create contacts with different names
+        self.create_contact(owner=self.token.user, name="Alice")
+        self.create_contact(owner=self.token.user, name="Bob")
+        self.create_contact(owner=self.token.user, name="Charlie")
+        # Search for 'Bob'
+        response = self.client.get(
+            self.base_url + "/?search=bob",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["name"] == "Bob"
+
+    def test_contact_case_insensitive_search_with_group_name_functionality(self):
+        # Create groups
+        group_alpha = self.create_contact_group(
+            name="Alpha Group", owner=self.token.user
+        )
+        group_beta = self.create_contact_group(
+            name="Beta Group", owner=self.token.user
+        )
+        # Create contacts in different groups
+        self.create_contact(
+            owner=self.token.user,
+            name="Alice", groups=[group_alpha]
+        )
+        self.create_contact(
+            owner=self.token.user,
+            name="Bob", groups=[group_beta]
+        )
+        # Search for contacts in 'Beta Group'
+        response = self.client.get(
+            self.base_url + "/?search=beta group",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["name"] == "Bob"
 
     def test_contact_group_list_without_auth_token(self):
         self.create_contact(owner=self.token.user)
@@ -1029,6 +1159,72 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 200
         assert len(response.data) == 2
 
+    def test_transaction_search_with_label(self):
+        contact = self.create_contact(owner=self.token.user)
+        self.create_credit_transaction(
+            contact=contact, label="Alpha Transaction")
+        self.create_debit_transaction(
+            contact=contact, label="Beta Transaction")
+        response = self.client.get(
+            self.base_url + "/?search=Beta Transaction",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["label"] == "Beta Transaction"
+
+    def test_transaction_case_insensitive_search_with_label(self):
+        contact = self.create_contact(owner=self.token.user)
+        self.create_credit_transaction(
+            contact=contact, label="Alpha Transaction")
+        self.create_debit_transaction(
+            contact=contact, label="Beta Transaction")
+        response = self.client.get(
+            self.base_url + "/?search=beta transaction",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["label"] == "Beta Transaction"
+
+    def test_transaction_search_with_contact_name(self):
+        contact_alpha = self.create_contact(
+            owner=self.token.user, name="Alpha Contact")
+        contact_beta = self.create_contact(
+            owner=self.token.user, name="Beta Contact")
+        self.create_credit_transaction(
+            contact=contact_alpha, label="Alpha Transaction")
+        self.create_debit_transaction(
+            contact=contact_beta, label="Beta Transaction")
+        response = self.client.get(
+            self.base_url + "/?search=Beta Contact",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["contact"] == contact_beta.id
+
+    def test_transaction_case_insensitive_search_with_contact_name(self):
+        contact_alpha = self.create_contact(
+            owner=self.token.user, name="Alpha Contact")
+        contact_beta = self.create_contact(
+            owner=self.token.user, name="Beta Contact")
+        self.create_credit_transaction(
+            contact=contact_alpha, label="Alpha Transaction")
+        self.create_debit_transaction(
+            contact=contact_beta, label="Beta Transaction")
+        response = self.client.get(
+            self.base_url + "/?search=beta contact",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["contact"] == contact_beta.id
+
     def test_transaction_list_with_empty_data(self):
         response = self.client.get(
             self.base_url + "/",
@@ -1341,6 +1537,77 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         self.create_repayment()
         response = self.client.get(
             self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+
+    def test_repayment_label_search(self):
+        self.create_repayment(label="Alpha Repayment")
+        self.create_repayment(label="Beta Repayment")
+        response = self.client.get(
+            self.base_url + "/?search=Alpha Repayment",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["label"] == "Alpha Repayment"
+
+    def test_repayment_transaction_label_search(self):
+        transaction = self.create_credit_transaction(label="Alpha Transaction")
+        self.create_repayment(transaction=transaction)
+        response = self.client.get(
+            self.base_url + "/?search=Alpha Transaction",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["transaction"] == transaction.id
+
+    def test_repayment_contact_name_search(self):
+        contact = self.create_contact(name="Alpha Contact")
+        transaction = self.create_credit_transaction(contact=contact)
+        self.create_repayment(transaction=transaction)
+        response = self.client.get(
+            self.base_url + "/?search=Alpha Contact",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+
+    def test_repayment_label_case_insensitive_search(self):
+        repayment = self.create_repayment(label="Alpha Repayment")
+        response = self.client.get(
+            self.base_url + "/?search=alpha repayment",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["label"] == "Alpha Repayment"
+
+    def test_repayment_transaction_label_case_insensitive_search(self):
+        transaction = self.create_credit_transaction(label="Alpha Transaction")
+        self.create_repayment(transaction=transaction)
+        response = self.client.get(
+            self.base_url + "/?search=alpha transaction",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["transaction"] == transaction.id
+
+    def test_repayment_contact_name_case_insensitive_search(self):
+        contact = self.create_contact(name="Alpha Contact")
+        transaction = self.create_credit_transaction(contact=contact)
+        self.create_repayment(transaction=transaction)
+        response = self.client.get(
+            self.base_url + "/?search=alpha contact",
             content_type="application/json",
             **self.headers
         )
