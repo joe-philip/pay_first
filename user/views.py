@@ -44,6 +44,7 @@ class TransactionsViewSet(ModelViewSet):
 class RepymentsViewSet(ModelViewSet):
     serializer_class = RepaymentsSerializer
     permission_classes = (IsAuthenticated, IsOwnRepayment)
+    search_fields = ("label", "transaction__label", "transaction__contact__name")
 
     def get_queryset(self) -> QuerySet[Repayments]:
         return Repayments.objects.filter(transaction__contact__owner=self.request.user)
