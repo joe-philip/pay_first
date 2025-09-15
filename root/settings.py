@@ -140,14 +140,22 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "root.utils.exception_handlers.exception_handler",
+
     "DEFAULT_RENDERER_CLASSES": [
         "root.utils.renderers.JSONRenderer"
     ],
+
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "root.utils.authentication.ExpiringTokenAuthentication"
     ],
-    "DEFAULT_FILTER_BACKENDS": ["rest_framework.filters.SearchFilter"],
-    "SEARCH_PARAM": "search"
+
+    "DEFAULT_FILTER_BACKENDS": [
+        "rest_framework.filters.SearchFilter"
+    ],
+    "SEARCH_PARAM": "search",
+
+    'DEFAULT_PAGINATION_CLASS': 'root.utils.filters.pagination.URLPagination',
+    "PAGE_SIZE": 10
 }
 
 AUTH_TOKEN_EXPIRY = timedelta(

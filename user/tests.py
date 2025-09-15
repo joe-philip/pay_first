@@ -251,6 +251,22 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 401
 
+    def test_pagination_contact_group_list_success(self):
+        owner = self.token.user
+        for i in range(15):
+            self.create_contact_group(owner=owner, name=f"Group {i+1}")
+        response = self.client.get(
+            self.base_url + "/?page=2&page_size=5",
+            content_type="application/json",
+            **self.headers
+        )
+        print(response.data)
+        assert response.status_code == 200
+        assert len(response.data.get("results", [])) == 5
+        assert response.data.get("results", [])[0]["name"] == "Group 6"
+        assert response.data.get("results", [])[-1]["name"] == "Group 10"
+        assert response.data['count'] == 15
+
     # List API Test Cases End
 
     # Retrieve API Test Cases Start
