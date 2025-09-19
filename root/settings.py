@@ -150,9 +150,11 @@ REST_FRAMEWORK = {
     ],
 
     "DEFAULT_FILTER_BACKENDS": [
-        "rest_framework.filters.SearchFilter"
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter"
     ],
     "SEARCH_PARAM": "search",
+    "ORDERING_PARAM": "ordering",
 
     'DEFAULT_PAGINATION_CLASS': 'root.utils.filters.pagination.URLPagination',
     "PAGE_SIZE": 10
