@@ -2,8 +2,10 @@ from collections import OrderedDict
 
 from django.db.models import QuerySet
 from rest_framework import serializers
+from rest_framework.request import Request
 
-from .models import ContactGroup, Contacts, Repayments, Transactions
+from .models import (ContactGroup, Contacts, PaymentMethods, Repayments,
+                     Transactions)
 
 
 class ContactGroupSerializer(serializers.ModelSerializer):
@@ -98,3 +100,45 @@ class RepaymentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Repayments
         fields = '__all__'
+
+
+class PaymentMethodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentMethods
+        fields = "__all__"
+        read_only_fields = ("owner", "is_common")
+
+    def validate_label(self, value: str) -> str:
+        queryset: QuerySet = self.context["view"].get_queryset()
+        queryset = queryset.filter(owner=self.context["request"].user)
+        if instance := getattr(self, "instance", None):
+            queryset = queryset.exclude(id=instance.id)
+        if queryset.filter(label=value).exists():
+            raise serializers.ValidationError(
+                "Instance with this name already exists"
+            )
+        return value
+
+    def validate_is_default(self, value: bool) -> bool:
+        queryset: QuerySet = self.context["view"].get_queryset()
+        payment_methods = queryset.filter(
+            owner=self.context["request"].user
+        )
+        if not payment_methods.exists():
+            return True  # Returns True if user has no other payment_methods
+        if instance := getattr(self, "instance", None):
+            payment_methods = payment_methods.exclude(id=instance.id)
+        if value:
+            # Updates all other payment methods default key to False if the current payment method is True
+            payment_methods.update(is_default=False)
+        else:
+            if not payment_methods.filter(is_default=True).exists():
+                raise serializers.ValidationError(
+                    "Atleast one payment method should be set to default payment method"
+                )
+        return value
+
+    def save(self, **kwargs):
+        request: Request = self.context["request"]
+        kwargs["owner"] = request.user
+        return super().save(**kwargs)
