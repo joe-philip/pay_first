@@ -121,3 +121,16 @@ class Repayments(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+class PaymentMethods(models.Model):
+    label = models.CharField(max_length=50)
+    is_default = models.BooleanField(default=False)
+    is_common = models.BooleanField(default=False)
+    owner = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "payment_methods"
+        verbose_name = "Payment method"
+
+    def __str__(self) -> str: return self.label
