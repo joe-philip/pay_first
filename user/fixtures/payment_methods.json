@@ -1,0 +1,12 @@
+[
+    {
+        "model": "user.paymentmethods",
+        "pk": 1,
+        "fields": {
+            "label": "Cash",
+            "is_default": true,
+            "is_common": true,
+            "owner": 1
+        }
+    }
+]
