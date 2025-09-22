@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    env_file:
+      - ./.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - pay-first-network
+
+  web:
+    image: pay-first-web-app
+    build: .
+    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client manage.py runserver 0.0.0.0:8000 # For debugging with VSCode
+    # command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+      - "5678:5678"
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+    networks:
+      - pay-first-network
+
+  tests:
+    build: .
+    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m pytest -v
+    volumes:
+      - .:/app
+    ports:
+      - "5679:5678"
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+    networks:
+      - pay-first-network
+
+volumes:
+  postgres_data:
+networks:
+  pay-first-network:
