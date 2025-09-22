@@ -81,6 +81,9 @@ class Transactions(models.Model):
     description = models.TextField(blank=True)
     return_date = models.DateTimeField(null=True)
     date = models.DateTimeField(auto_now=True)
+    payment_method = models.ForeignKey(
+        PaymentMethods, on_delete=models.PROTECT
+    )
 
     @property
     def pending_amount(self) -> float:
@@ -104,6 +107,9 @@ class Repayments(models.Model):
     amount = models.FloatField()
     remarks = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True)
+    payment_method = models.ForeignKey(
+        PaymentMethods, on_delete=models.PROTECT
+    )
 
     def clean(self):
         total_paid_amount = sum(

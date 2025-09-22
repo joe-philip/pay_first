@@ -1,14 +1,26 @@
-from pytz import timezone
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.management import call_command
+from pytest import fixture
+from pytz import timezone
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
-from django.conf import settings
+
 # Create your tests here.
 
 # Constants for default user credentials
 DEFAULT_PASSWORD = "Paword*1"  # Password of length 8
 DEFAULT_USERNAME = "tester@payfirst.com"
 DEFAULT_TIMEZONE = timezone(settings.TIME_ZONE)
+
+
+@fixture(autouse=True)
+def load_fixture(django_db_blocker):
+    with django_db_blocker.unblock():
+        call_command(
+            "loaddata", "main/fixtures/user.json",
+            "user/fixtures/payment_methods.json"
+        )
 
 
 class BasicTestsMixin:
@@ -64,9 +76,10 @@ class SignupAPITestCase(APITestCase, BasicTestsMixin):
         assert (
             response.status_code == 201
         ), "Expected status code 201 for successful signup"
-        assert User.objects.count() == 1, "Expected one user to be created"
+        users = User.objects.filter(is_superuser=False)
+        assert users.count() == 1, "Expected one user to be created"
         assert (
-            User.objects.get().username == DEFAULT_USERNAME
+            users.get().username == DEFAULT_USERNAME
         ), "Expected username to match the username in payload"  # fmt: off
 
     def test_username_already_exists(self):
@@ -243,7 +256,7 @@ class SignupAPITestCase(APITestCase, BasicTestsMixin):
             response.status_code == 201
         ), "Expected status code 201 for missing last name, since it's not required"
         assert (
-            User.objects.filter(last_name="").count() == 1
+            User.objects.filter(last_name="", is_superuser=False).count() == 1
         ), "Expected one user to be created even without last name"
 
 

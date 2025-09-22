@@ -85,6 +85,16 @@ class TransactionsSerializer(serializers.ModelSerializer):
     repayments = serializers.SerializerMethodField()
     pending_amount = serializers.SerializerMethodField()
 
+    def validate_payment_method(self, value: PaymentMethods):
+        if not value:
+            default_payment_method = PaymentMethods.objects.filter(
+                owner=self.context["request"].user, is_default=True
+            )
+            if default_payment_method.exists():
+                return default_payment_method.first()
+            return PaymentMethods.objects.filter(is_common=True).first()
+        return value
+
     def get_repayments(self, instance: Transactions):
         return self.RepaymentsSerializer(instance.repayments.all(), many=True).data
 
@@ -94,12 +104,26 @@ class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transactions
         fields = '__all__'
+        extra_kwargs = {
+            "payment_method": {"allow_null": True}
+        }
 
 
 class RepaymentsSerializer(serializers.ModelSerializer):
+    def validate_payment_method(self, value: PaymentMethods):
+        if not value:
+            default_payment_method = PaymentMethods.objects.filter(
+                owner=self.context["request"].user, is_default=True
+            )
+            if default_payment_method.exists():
+                return default_payment_method.first()
+            return PaymentMethods.objects.filter(is_common=True).first()
+        return value
+
     class Meta:
         model = Repayments
         fields = '__all__'
+        extra_kwargs = {"payment_method": {"allow_null": True}}
 
 
 class PaymentMethodSerializer(serializers.ModelSerializer):
