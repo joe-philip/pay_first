@@ -1060,15 +1060,34 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 400
         assert "label" in errors.get("error")
 
-    def test_credit_transaction_create_withoud_payload(self):
+    def test_credit_transaction_create_withoud_payment_method(self):
+        data = deepcopy(self.payload)
+        data.pop("payment_method")
         response = self.client.post(
             self.base_url + "/",
+            data,
             content_type="application/json",
             **self.headers
         )
+        errors = response.data
         assert response.status_code == 400
+        assert "payment_method" in errors.get("error")
 
-    def test_debit_transaction_create_withoud_payload(self):
+    def test_debit_transaction_create_withoud_payment_method(self):
+        data = deepcopy(self.payload)
+        data.update(_type=TransactionTypeChoices.DEBIT.value)
+        data.pop("payment_method")
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        errors = response.data
+        assert response.status_code == 400
+        assert "payment_method" in errors.get("error")
+
+    def test_transaction_create_withoud_payload(self):
         response = self.client.post(
             self.base_url + "/",
             content_type="application/json",
@@ -1416,6 +1435,19 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         errors = response.data
         assert response.status_code == 400
         assert "label" in errors.get("error")
+
+    def test_create_repayment_without_payment_method(self):
+        data = deepcopy(self.payload)
+        data.pop("payment_method")
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        errors = response.data
+        assert response.status_code == 400
+        assert "payment_method" in errors.get("error")
 
     def test_create_repayment_without_payload(self):
         response = self.client.post(
@@ -1813,7 +1845,8 @@ class PaymentMethodAPITestCase(APITestCase, MainTestsMixin):
     # Delete API Test Cases Start
 
     def test_delete_success(self):
-        payment_method = self.create_payment_method(label="Delete Test", is_default=True)
+        payment_method = self.create_payment_method(
+            label="Delete Test", is_default=True)
         response = self.client.delete(
             self.base_url + f"/{payment_method.id}/",
             content_type="application/json",
