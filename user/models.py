@@ -84,6 +84,9 @@ class Transactions(models.Model):
     payment_method = models.ForeignKey(
         PaymentMethods, on_delete=models.PROTECT
     )
+    transaction_reference = models.TextField(
+        null=True, help_text="Optional reference ID for this transaction"
+    )
 
     @property
     def pending_amount(self) -> float:
