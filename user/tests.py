@@ -22,6 +22,7 @@ DEFAULT_CONTACT_NAME = "Test Contact"
 DEFAULT_PAYMENT_METHOD_NAME = "Test payment method"
 
 DEFAULT_TRANSACTION_NAME = "Test Transaction"
+DEFAULT_TRANSACTION_TRANSACTION_REFERENCE_NAME = "Test Transaction"
 
 DEFAULT_CREDIT_TRANSACTION_NAME = "Test Credit Transaction"
 DEFAULT_DEBIT_TRANSACTION_NAME = "Test Debit Transaction"
@@ -840,7 +841,8 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
             "description": "",
             "return_date": None,
             "date": str(datetime.now(tz=DEFAULT_TIMEZONE)),
-            "payment_method": self.create_payment_method().id
+            "payment_method": self.create_payment_method().id,
+            "transaction_reference": DEFAULT_TRANSACTION_TRANSACTION_REFERENCE_NAME
         }
         return super().setUp()
 
@@ -1086,6 +1088,29 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         errors = response.data
         assert response.status_code == 400
         assert "payment_method" in errors.get("error")
+
+    def test_credit_transaction_create_without_transaction_reference(self):
+        data = deepcopy(self.payload)
+        data.pop("transaction_reference")
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+
+    def test_debit_transaction_create_withoud_transaction_reference(self):
+        data = deepcopy(self.payload)
+        data.update(_type=TransactionTypeChoices.DEBIT.value)
+        data.pop("transaction_reference")
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
 
     def test_transaction_create_withoud_payload(self):
         response = self.client.post(
