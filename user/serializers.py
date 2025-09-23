@@ -131,6 +131,7 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
         model = PaymentMethods
         fields = "__all__"
         read_only_fields = ("owner", "is_common")
+        extra_kwargs = {"is_default": {"required": True, "allow_null": True}}
 
     def validate_label(self, value: str) -> str:
         queryset: QuerySet = self.context["view"].get_queryset()

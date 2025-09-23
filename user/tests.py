@@ -1616,4 +1616,226 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 404
 
+
+class PaymentMethodAPITestCase(APITestCase, MainTestsMixin):
+    def setUp(self):
+        self.base_url = "/user/payment_method"
+        self.token = self.create_user_token()
+        self.payload = {
+            "label": DEFAULT_PAYMENT_METHOD_NAME,
+            "is_default": False
+        }
+        self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
+        return super().setUp()
+
+    # Create API Test cases Start
+
+    def test_create_api_success(self):
+        data = deepcopy(self.payload)
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+        assert response.data["label"] == data.get("label")
+
+    def test_create_api_with_existing_name(self):
+        data = deepcopy(self.payload)
+        payment_method = self.create_payment_method()
+        data.update(label=payment_method.label)
+        self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+        assert "label" in response.data.get("error", {})
+
+    def test_create_api_with_default_true(self):
+        data = deepcopy(self.payload)
+        data["is_default"] = True
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+        assert response.data["is_default"] is True
+
+    def test_create_api_with_multiple_default_true(self):
+        data = deepcopy(self.payload)
+        payment_method = self.create_payment_method(
+            label="Default 2", is_default=True)
+        data["is_default"] = True
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        payment_method.refresh_from_db()
+        assert response.status_code == 201
+        assert response.data["is_default"] is True
+        assert not payment_method.is_default
+
+    def test_create_api_with_default_false(self):
+        data = deepcopy(self.payload)
+        data["is_default"] = False
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+        assert response.data["is_default"] is True
+
+    def test_create_api_without_default(self):
+        data = deepcopy(self.payload)
+        data.pop("is_default")
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+        assert "is_default" in response.data["error"]
+
+    # Create API Test cases End
+
+    # List API Test Cases Start
+
+    def test_list_api_success(self):
+        response = self.client.get(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+
+    # List API Test Cases End
+
+    # Retrieve API Test Cases Start
+
+    def test_retrieve_success(self):
+        response = self.client.get(
+            self.base_url + f"/{1}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data.get("id") == 1
+
+    def test_retrieve_invalid_pk(self):
+        response = self.client.get(
+            self.base_url + "/0/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    # Retrieve API Test Cases End
+
+    # Update API Test Cases Start
+
+    def test_update_success(self):
+        payment_method = self.create_payment_method(
+            label="Update Test", is_default=True
+        )
+        data = deepcopy(self.payload)
+        data.update(label="Updated Label", is_default=True)
+        response = self.client.put(
+            self.base_url + f"/{payment_method.id}/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data["label"] == "Updated Label"
+        assert response.data["is_default"] is True
+
+    def test_update_invalid_pk(self):
+        data = deepcopy(self.payload)
+        response = self.client.put(
+            self.base_url + "/0/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    def test_update_default_false(self):
+        PaymentMethods.objects.filter(
+            owner=self.token.user
+        ).update(is_default=False)
+        payment_method = self.create_payment_method(
+            label="Default False", is_default=True
+        )
+        data = deepcopy(self.payload)
+        data.update(
+            label="Default False",
+            is_default=False
+
+        )
+        response = self.client.put(
+            self.base_url + f"/{payment_method.id}/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+        assert "is_default" in response.data["error"]
+
+    def test_update_common_payment_method(self):
+        data = deepcopy(self.payload)
+        response = self.client.put(
+            self.base_url + "/1/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 403
+
+    # Update API Test Cases End
+
     # Delete API Test Cases Start
+
+    def test_delete_success(self):
+        payment_method = self.create_payment_method(label="Delete Test", is_default=True)
+        response = self.client.delete(
+            self.base_url + f"/{payment_method.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 204
+        assert not PaymentMethods.objects.filter(id=payment_method.id).exists()
+
+    def test_delete_invalid_pk(self):
+        response = self.client.delete(
+            self.base_url + "/0/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    def test_delete_common_payment_method(self):
+        response = self.client.delete(
+            self.base_url + "/1/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 403
+
+    # Delete API Test Cases End

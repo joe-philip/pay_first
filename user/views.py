@@ -65,6 +65,8 @@ class PaymentMethodViewSet(ModelViewSet):
     permission_classes = (
         IsAuthenticated, IsOwnPaymentMethod | IsAdminPaymentMethod
     )
+    search_fields = ("label",)
+    ordering = ("id",)
 
     def get_queryset(self) -> QuerySet[PaymentMethods]:
         return PaymentMethods.objects.filter(
