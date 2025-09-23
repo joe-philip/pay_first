@@ -20,6 +20,7 @@ DEFAULT_CONTACT_SUB_GROUP_NAME = "Test Contact Sub Group"
 DEFAULT_CONTACT_NAME = "Test Contact"
 
 DEFAULT_PAYMENT_METHOD_NAME = "Test payment method"
+DEFAULT_REPAYMENT_TRANSACTION_REFERENCE_NAME = "Test Transaction"
 
 DEFAULT_TRANSACTION_NAME = "Test Transaction"
 DEFAULT_TRANSACTION_TRANSACTION_REFERENCE_NAME = "Test Transaction"
@@ -81,6 +82,9 @@ class MainTestsMixin(BasicTestsMixin):
         kwargs["return_date"] = kwargs.get("return_date")
         kwargs["date"] = kwargs.get("date", datetime.now(tz=DEFAULT_TIMEZONE))
         kwargs["payment_method"] = self.create_payment_method()
+        kwargs["transaction_reference"] = kwargs.get(
+            "transaction_reference", DEFAULT_TRANSACTION_TRANSACTION_REFERENCE_NAME
+        )
         if (transaction := Transactions.objects.filter(**kwargs)).exists():
             return transaction.first()
         return Transactions.objects.create(**kwargs)
@@ -99,6 +103,9 @@ class MainTestsMixin(BasicTestsMixin):
         kwargs["amount"] = kwargs.get("amount", kwargs['transaction'].amount)
         kwargs["remarks"] = kwargs.get("remarks", "")
         kwargs["payment_method"] = self.create_payment_method()
+        kwargs["transaction_reference"] = kwargs.get(
+            "transaction_reference", DEFAULT_REPAYMENT_TRANSACTION_REFERENCE_NAME
+        )
         if (repaymet := Repayments.objects.filter(**kwargs)).exists():
             return repaymet.first()
         return Repayments.objects.create(**kwargs)
@@ -1356,7 +1363,8 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
             "transaction": self.credit_transaction.id,
             "remarks": "",
             "date": str(datetime.now(tz=DEFAULT_TIMEZONE)),
-            "payment_method": self.create_payment_method().id
+            "payment_method": self.create_payment_method().id,
+            "transaction_reference": DEFAULT_REPAYMENT_TRANSACTION_REFERENCE_NAME
         }
         self.debit_transaction = self.create_debit_transaction(contact=contact)
         self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
@@ -1473,6 +1481,18 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         errors = response.data
         assert response.status_code == 400
         assert "payment_method" in errors.get("error")
+
+    def test_create_repayment_without_transaction_reference(self):
+        data = deepcopy(self.payload)
+        data.pop("transaction_reference")
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+        assert "transaction_reference" in response.data["error"]
 
     def test_create_repayment_without_payload(self):
         response = self.client.post(
