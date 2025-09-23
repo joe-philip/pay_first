@@ -113,6 +113,9 @@ class Repayments(models.Model):
     payment_method = models.ForeignKey(
         PaymentMethods, on_delete=models.PROTECT
     )
+    transaction_reference = models.TextField(
+        null=True, help_text="Optional reference ID for this transaction"
+    )
 
     def clean(self):
         total_paid_amount = sum(
