@@ -9,7 +9,7 @@ from rest_framework.test import APITestCase
 from main.tests import BasicTestsMixin
 
 from .choices import TransactionTypeChoices
-from .models import (ContactGroup, Contacts, PaymentMethods, Repayments,
+from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources, Repayments,
                      Transactions)
 
 # Create your tests here.
@@ -27,6 +27,8 @@ DEFAULT_TRANSACTION_TRANSACTION_REFERENCE_NAME = "Test Transaction"
 
 DEFAULT_CREDIT_TRANSACTION_NAME = "Test Credit Transaction"
 DEFAULT_DEBIT_TRANSACTION_NAME = "Test Debit Transaction"
+
+DEFAULT_PAYMENT_SOURCE_LABEL = "Test Payment Source"
 
 DEFAULT_TIMEZONE = timezone("Asia/Calcutta")
 DEFAULT_REPAYMET_LABEL = "Test Repayment"
@@ -109,6 +111,15 @@ class MainTestsMixin(BasicTestsMixin):
         if (repaymet := Repayments.objects.filter(**kwargs)).exists():
             return repaymet.first()
         return Repayments.objects.create(**kwargs)
+
+    def create_payment_source(self, **kwargs) -> PaymentSources:
+        if (payment_source := PaymentSources.objects.filter(**kwargs)).exists():
+            return payment_source.first()
+        if not "label" in kwargs:
+            kwargs["label"] = DEFAULT_PAYMENT_SOURCE_LABEL
+        if not "owner" in kwargs:
+            kwargs["owner"] = self.create_user()
+        return PaymentSources.objects.create(**kwargs)
 
 
 class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
@@ -1917,3 +1928,166 @@ class PaymentMethodAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 403
 
     # Delete API Test Cases End
+
+
+class PaymentSourcesAPITestCase(APITestCase, MainTestsMixin):
+    def setUp(self):
+        self.base_url = "/user/payment_source"
+        self.token = self.create_user_token()
+        self.payload = {
+            "label": DEFAULT_PAYMENT_SOURCE_LABEL
+        }
+        self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
+        return super().setUp()
+
+    # Create API Test Case Start
+
+    def test_create_api_success(self):
+        data = deepcopy(self.payload)
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+        assert response.data["label"] == data["label"]
+
+    def test_create_api_duplicate_label(self):
+        data = deepcopy(self.payload)
+        # Create once
+        payment_source = self.create_payment_source()
+        data.update(label=payment_source.label)
+        # Try to create again with same label
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+        assert "label" in response.data.get("error", {})
+
+    def test_create_api_without_label(self):
+        data = deepcopy(self.payload)
+        data.pop("label")
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+        assert "label" in response.data.get("error", {})
+
+    def test_create_api_without_payload(self):
+        response = self.client.post(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+
+    # Create API Test Case End
+
+    # List API Test Case Start
+
+    def test_list_api_success(self):
+        self.create_payment_source()
+        response = self.client.get(
+            self.base_url + "/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+
+    # List API Test Case End
+
+    # Retrieve API Test Case Start
+
+    def test_retrieve_api_success(self):
+        payment_source = self.create_payment_source()
+        response = self.client.get(
+            self.base_url + f"/{payment_source.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data.get("id") == payment_source.id
+
+    def test_retrieve_api_invalid_pk(self):
+        response = self.client.get(
+            self.base_url + "/0/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    # Retrieve API Test Case End
+
+    # Update API Test Case Start
+
+    def test_update_api_success(self):
+        payment_source = self.create_payment_source(label="Old Label")
+        data = deepcopy(self.payload)
+        data.update(label="Updated Label")
+        response = self.client.put(
+            self.base_url + f"/{payment_source.id}/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert response.data["label"] == "Updated Label"
+
+    def test_update_api_with_existing_label(self):
+        self.create_payment_source(label="Label1")
+        payment_source2 = self.create_payment_source(label="Label2")
+        data = deepcopy(self.payload)
+        data.update(label="Label1")
+        response = self.client.put(
+            self.base_url + f"/{payment_source2.id}/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+        assert "label" in response.data.get("error", {})
+
+    def test_update_api_without_label(self):
+        payment_source = self.create_payment_source(label="Old Label")
+        data = deepcopy(self.payload)
+        data.pop("label")
+        response = self.client.put(
+            self.base_url + f"/{payment_source.id}/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 400
+        assert "label" in response.data.get("error", {})
+
+    # Update API Test Case End
+
+    # Delete API Test Case Start
+
+    def test_delete_api_success(self):
+        payment_source = self.create_payment_source(label="Delete Test")
+        response = self.client.delete(
+            self.base_url + f"/{payment_source.id}/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 204
+        assert not PaymentSources.objects.filter(id=payment_source.id).exists()
+
+    def test_delete_api_with_invalid_pk(self):
+        response = self.client.delete(
+            self.base_url + "/0/",
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 404
+
+    # Delete API Test Case End
