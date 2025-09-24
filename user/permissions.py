@@ -2,7 +2,8 @@ from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import View
 
-from .models import ContactGroup, Contacts, Repayments, Transactions
+from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources,
+                     Repayments, Transactions)
 
 
 class IsContactGroupOwner(BasePermission):
@@ -54,5 +55,38 @@ class IsOwnRepayment(BasePermission):
     Returns:
         bool: True if the user is the owner, False otherwise.
     """
+
     def has_object_permission(self, request: Request, view: View, obj: Repayments) -> bool:
         return obj.transaction.contact.owner == request.user
+
+
+class IsOwnPaymentMethod(BasePermission):
+    """
+    Permission class that grants access only if the requesting user is the owner of the payment method.
+
+    Methods:
+        has_object_permission(request, view, obj):
+            Returns True if the payment method's owner matches the requesting user.
+    """
+
+    def has_object_permission(self, request: Request, view: View, obj: PaymentMethods) -> bool:
+        return obj.owner == request.user
+
+
+class IsAdminPaymentMethod(BasePermission):
+    """
+    Permission class that allows access to a PaymentMethods object only if:
+    - The request method is "GET".
+    - The owner of the payment method is a superuser.
+    - The payment method is marked as common.
+
+    Typically used to restrict read access to common payment methods owned by administrators.
+    """
+
+    def has_object_permission(self, request: Request, view: View, obj: PaymentMethods):
+        return request.method == "GET" and obj.owner.is_superuser and obj.is_common
+
+
+class IsOwnPaymentSource(BasePermission):
+    def has_object_permission(self, request: Request, view: View, obj: PaymentSources) -> bool:
+        return obj.owner == request.user

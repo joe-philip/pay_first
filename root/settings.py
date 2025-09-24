@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'rest_framework',
     "rest_framework.authtoken",
+    "corsheaders",
     "main",
     "user"
 ]
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -137,13 +139,25 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'root.utils.exception_handlers.exception_handler',
-    'DEFAULT_RENDERER_CLASSES': [
-        'root.utils.renderers.JSONRenderer'
+    "EXCEPTION_HANDLER": "root.utils.exception_handlers.exception_handler",
+
+    "DEFAULT_RENDERER_CLASSES": [
+        "root.utils.renderers.JSONRenderer"
     ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
+
+    "DEFAULT_AUTHENTICATION_CLASSES": [
         "root.utils.authentication.ExpiringTokenAuthentication"
-    ]
+    ],
+
+    "DEFAULT_FILTER_BACKENDS": [
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter"
+    ],
+    "SEARCH_PARAM": "search",
+    "ORDERING_PARAM": "ordering",
+
+    'DEFAULT_PAGINATION_CLASS': 'root.utils.filters.pagination.URLPagination',
+    "PAGE_SIZE": 10
 }
 
 AUTH_TOKEN_EXPIRY = timedelta(
@@ -152,3 +166,10 @@ AUTH_TOKEN_EXPIRY = timedelta(
     hours=int(os.environ.get("AUTH_TOKEN_EXPIRY_HOURS", 0)),
     days=int(os.environ.get("AUTH_TOKEN_EXPIRY_DAYS", 0))
 )
+
+
+# Django Cors Headers
+# https://pypi.org/project/django-cors-headers/
+
+CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+CORS_ALLOW_ALL_ORIGINS = bool(os.environ.get("CORS_ALLOW_ALL_ORIGINS"))

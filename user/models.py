@@ -55,6 +55,32 @@ class Contacts(models.Model):
         return self.name
 
 
+class PaymentMethods(models.Model):
+    label = models.CharField(max_length=50)
+    is_default = models.BooleanField(default=False)
+    is_common = models.BooleanField(default=False)
+    owner = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "payment_methods"
+        verbose_name = "Payment method"
+        unique_together = ("label", "owner")
+
+    def __str__(self) -> str: return self.label
+
+
+class PaymentSources(models.Model):
+    label = models.CharField(max_length=50)
+    owner = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+
+    def __str__(self) -> str: return self.label
+
+    class Meta:
+        db_table = "payment_sources"
+        verbose_name = "Payment Source"
+        unique_together = ("label", "owner")
+
+
 class Transactions(models.Model):
     label = models.CharField()
     contact = models.ForeignKey(
@@ -67,6 +93,16 @@ class Transactions(models.Model):
     description = models.TextField(blank=True)
     return_date = models.DateTimeField(null=True)
     date = models.DateTimeField(auto_now=True)
+    payment_method = models.ForeignKey(
+        PaymentMethods, on_delete=models.PROTECT
+    )
+    transaction_reference = models.TextField(
+        null=True, help_text="Optional reference ID for this transaction"
+    )
+    payment_source = models.ForeignKey(
+        PaymentSources, on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
 
     @property
     def pending_amount(self) -> float:
@@ -90,6 +126,16 @@ class Repayments(models.Model):
     amount = models.FloatField()
     remarks = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True)
+    payment_method = models.ForeignKey(
+        PaymentMethods, on_delete=models.PROTECT
+    )
+    transaction_reference = models.TextField(
+        null=True, help_text="Optional reference ID for this transaction"
+    )
+    payment_source = models.ForeignKey(
+        PaymentSources, on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
 
     def clean(self):
         total_paid_amount = sum(
