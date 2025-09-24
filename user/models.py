@@ -99,6 +99,10 @@ class Transactions(models.Model):
     transaction_reference = models.TextField(
         null=True, help_text="Optional reference ID for this transaction"
     )
+    payment_source = models.ForeignKey(
+        PaymentSources, on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
 
     @property
     def pending_amount(self) -> float:
@@ -127,6 +131,10 @@ class Repayments(models.Model):
     )
     transaction_reference = models.TextField(
         null=True, help_text="Optional reference ID for this transaction"
+    )
+    payment_source = models.ForeignKey(
+        PaymentSources, on_delete=models.SET_NULL,
+        null=True, blank=True
     )
 
     def clean(self):
