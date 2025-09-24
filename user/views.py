@@ -2,14 +2,14 @@ from django.db.models import Q, QuerySet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from .models import (ContactGroup, Contacts, PaymentMethods, Repayments,
-                     Transactions)
+from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources,
+                     Repayments, Transactions)
 from .permissions import (IsAdminPaymentMethod, IsContactGroupOwner,
-                          IsContactOwner, IsOwnPaymentMethod, IsOwnRepayment,
+                          IsContactOwner, IsOwnPaymentMethod, IsOwnPaymentSource, IsOwnRepayment,
                           IsOwnTransaction)
 from .serializers import (ContactGroupSerializer, ContactsSerializer,
-                          PaymentMethodSerializer, RepaymentsSerializer,
-                          TransactionsSerializer)
+                          PaymentMethodSerializer, PaymentSourcesSerializer,
+                          RepaymentsSerializer, TransactionsSerializer)
 
 # Create your views here.
 
@@ -76,3 +76,13 @@ class PaymentMethodViewSet(ModelViewSet):
                 owner__is_superuser=True, is_common=True
             )
         )
+
+
+class PaymentSourceViewSet(ModelViewSet):
+    serializer_class = PaymentSourcesSerializer
+    permission_classes = (IsAuthenticated, IsOwnPaymentSource)
+    search_fields = ("label",)
+    ordering = ("id",)
+
+    def get_queryset(self) -> QuerySet[PaymentSources]:
+        return PaymentSources.objects.filter(owner=self.request.user)
