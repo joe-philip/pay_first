@@ -170,6 +170,17 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
 
 
 class PaymentSourcesSerializer(serializers.ModelSerializer):
+    def validate_label(self, value: str) -> str:
+        payment_sources = PaymentSources.objects.filter(
+            label=value,
+            owner=self.context["request"].user
+        )
+        if instance := getattr(self, "instance", None):
+            payment_sources = payment_sources.exclude(id=instance.id)
+        if payment_sources.exists():
+            raise serializers.ValidationError("Payment source already exist")
+        return value
+
     class Meta:
         model = PaymentSources
         fields = "__all__"
