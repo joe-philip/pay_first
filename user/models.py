@@ -69,6 +69,18 @@ class PaymentMethods(models.Model):
     def __str__(self) -> str: return self.label
 
 
+class PaymentSources(models.Model):
+    label = models.CharField(max_length=50)
+    owner = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+
+    def __str__(self) -> str: return self.label
+
+    class Meta:
+        db_table = "payment_sources"
+        verbose_name = "Payment Source"
+        unique_together = ("label", "owner")
+
+
 class Transactions(models.Model):
     label = models.CharField()
     contact = models.ForeignKey(
@@ -86,6 +98,10 @@ class Transactions(models.Model):
     )
     transaction_reference = models.TextField(
         null=True, help_text="Optional reference ID for this transaction"
+    )
+    payment_source = models.ForeignKey(
+        PaymentSources, on_delete=models.SET_NULL,
+        null=True, blank=True
     )
 
     @property
@@ -115,6 +131,10 @@ class Repayments(models.Model):
     )
     transaction_reference = models.TextField(
         null=True, help_text="Optional reference ID for this transaction"
+    )
+    payment_source = models.ForeignKey(
+        PaymentSources, on_delete=models.SET_NULL,
+        null=True, blank=True
     )
 
     def clean(self):

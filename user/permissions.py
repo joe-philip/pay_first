@@ -2,8 +2,8 @@ from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import View
 
-from .models import (ContactGroup, Contacts, PaymentMethods, Repayments,
-                     Transactions)
+from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources,
+                     Repayments, Transactions)
 
 
 class IsContactGroupOwner(BasePermission):
@@ -82,5 +82,11 @@ class IsAdminPaymentMethod(BasePermission):
 
     Typically used to restrict read access to common payment methods owned by administrators.
     """
+
     def has_object_permission(self, request: Request, view: View, obj: PaymentMethods):
         return request.method == "GET" and obj.owner.is_superuser and obj.is_common
+
+
+class IsOwnPaymentSource(BasePermission):
+    def has_object_permission(self, request: Request, view: View, obj: PaymentSources) -> bool:
+        return obj.owner == request.user
