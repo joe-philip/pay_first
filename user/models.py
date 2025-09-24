@@ -158,3 +158,4 @@ class PaymentSources(models.Model):
     class Meta:
         db_table = "payment_sources"
         verbose_name = "Payment Source"
+        unique_together = ("label", "owner")
