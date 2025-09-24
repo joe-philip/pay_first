@@ -4,8 +4,8 @@ from django.db.models import QuerySet
 from rest_framework import serializers
 from rest_framework.request import Request
 
-from .models import (ContactGroup, Contacts, PaymentMethods, Repayments,
-                     Transactions)
+from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources,
+                     Repayments, Transactions)
 
 
 class ContactGroupSerializer(serializers.ModelSerializer):
@@ -166,4 +166,15 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         request: Request = self.context["request"]
         kwargs["owner"] = request.user
+        return super().save(**kwargs)
+
+
+class PaymentSourcesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentSources
+        fields = "__all__"
+        read_only_fields = ("owner",)
+
+    def save(self, **kwargs):
+        kwargs["owner"] = self.context["request"].user
         return super().save(**kwargs)
