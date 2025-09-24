@@ -25,6 +25,10 @@ router.register(
     r"payment_method", views.PaymentMethodViewSet,
     basename="payment_method"
 )
+router.register(
+    r"payment_source", views.PaymentSourceViewSet,
+    basename="payment_source"
+)
 
 urlpatterns = [
     path("", include(router.urls)),
