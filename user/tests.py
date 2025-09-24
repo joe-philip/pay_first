@@ -87,6 +87,7 @@ class MainTestsMixin(BasicTestsMixin):
         kwargs["transaction_reference"] = kwargs.get(
             "transaction_reference", DEFAULT_TRANSACTION_TRANSACTION_REFERENCE_NAME
         )
+        kwargs["payment_source"] = kwargs.get("payment_source")
         if (transaction := Transactions.objects.filter(**kwargs)).exists():
             return transaction.first()
         return Transactions.objects.create(**kwargs)
@@ -108,6 +109,7 @@ class MainTestsMixin(BasicTestsMixin):
         kwargs["transaction_reference"] = kwargs.get(
             "transaction_reference", DEFAULT_REPAYMENT_TRANSACTION_REFERENCE_NAME
         )
+        kwargs["payment_source"] = kwargs.get("payment_source")
         if (repaymet := Repayments.objects.filter(**kwargs)).exists():
             return repaymet.first()
         return Repayments.objects.create(**kwargs)
@@ -860,7 +862,8 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
             "return_date": None,
             "date": str(datetime.now(tz=DEFAULT_TIMEZONE)),
             "payment_method": self.create_payment_method().id,
-            "transaction_reference": DEFAULT_TRANSACTION_TRANSACTION_REFERENCE_NAME
+            "transaction_reference": DEFAULT_TRANSACTION_TRANSACTION_REFERENCE_NAME,
+            "payment_source": self.create_payment_source(owner=self.token.user).id
         }
         return super().setUp()
 
@@ -1130,6 +1133,29 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 201
 
+    def test_credit_transaction_create_without_payment_source(self):
+        data = deepcopy(self.payload)
+        data.pop("payment_source")
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+
+    def test_debit_transaction_create_without_payment_source(self):
+        data = deepcopy(self.payload)
+        data.update(_type=TransactionTypeChoices.DEBIT.value)
+        data.pop("payment_source")
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+
     def test_transaction_create_withoud_payload(self):
         response = self.client.post(
             self.base_url + "/",
@@ -1375,7 +1401,8 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
             "remarks": "",
             "date": str(datetime.now(tz=DEFAULT_TIMEZONE)),
             "payment_method": self.create_payment_method().id,
-            "transaction_reference": DEFAULT_REPAYMENT_TRANSACTION_REFERENCE_NAME
+            "transaction_reference": DEFAULT_REPAYMENT_TRANSACTION_REFERENCE_NAME,
+            "payment_source": self.create_payment_source(owner=self.token.user).id
         }
         self.debit_transaction = self.create_debit_transaction(contact=contact)
         self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
@@ -1504,6 +1531,17 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
         )
         assert response.status_code == 400
         assert "transaction_reference" in response.data["error"]
+
+    def test_create_repayment_without_payment_source(self):
+        data = deepcopy(self.payload)
+        data.pop("payment_source")
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
 
     def test_create_repayment_without_payload(self):
         response = self.client.post(
