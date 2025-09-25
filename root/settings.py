@@ -31,7 +31,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env(
+SECRET_KEY = env.str(
     "SECRET_KEY", "django-insecure-pvl*_ypzk)2bzhl77u2y$q801vus)+r6xik3+@f&frn3s-$^f"
 )
 
@@ -95,11 +95,11 @@ install_as_MySQLdb()
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("POSTGRES_DB"),
-        "USER": env("POSTGRES_USER"),
-        "PASSWORD": env("POSTGRES_PASSWORD"),
+        "NAME": env.str("POSTGRES_DB"),
+        "USER": env.str("POSTGRES_USER"),
+        "PASSWORD": env.str("POSTGRES_PASSWORD"),
         "PORT": env.int("DB_PORT", 5432),
-        'HOST': env("DB_HOST")
+        'HOST': env.str("DB_HOST")
     }
 }
 
@@ -181,5 +181,5 @@ AUTH_TOKEN_EXPIRY = timedelta(
 # Django Cors Headers
 # https://pypi.org/project/django-cors-headers/
 
-# CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS", "").split(",")
+# CORS_ALLOWED_ORIGINS = env.str("CORS_ALLOWED_ORIGINS", "").split(",")
 CORS_ALLOW_ALL_ORIGINS = bool(env("CORS_ALLOW_ALL_ORIGINS"))
