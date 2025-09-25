@@ -5,13 +5,6 @@ services:
     plan: free  # change to standard or higher if needed
     buildCommand: ""   # Render builds from Dockerfile, so this is empty
     startCommand: ""   # Also handled in Dockerfile CMD
-    envVars:
-      - key: SECRET_KEY
-        generateValue: true
-      - key: DEBUG
-        value: "False"
-      - key: ALLOWED_HOSTS
-        value: "pay-first-web-service.onrender.com"
 
 databases:
   - name: django-db
