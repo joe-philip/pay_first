@@ -13,25 +13,35 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+from environ import Env
+
+
+env = Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
 
 from pymysql import install_as_MySQLdb
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Take environment variables from .env file
+Env.read_env(os.path.join(BASE_DIR, '.env'))
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY", "django-insecure-pvl*_ypzk)2bzhl77u2y$q801vus)+r6xik3+@f&frn3s-$^f"
+SECRET_KEY = env(
+    "SECRET_KEY", default="django-insecure-pvl*_ypzk)2bzhl77u2y$q801vus)+r6xik3+@f&frn3s-$^f"
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get('DEBUG', True))
+DEBUG = env.bool('DEBUG', True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
 
 # Application definition
@@ -89,10 +99,10 @@ install_as_MySQLdb()
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("DB"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": os.environ.get("MYSQL_ROOT_PASSWORD"),
-        'HOST': os.environ.get("DB_HOST")
+        "NAME": env("DB"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("MYSQL_ROOT_PASSWORD"),
+        'HOST': env("DB_HOST")
     }
 }
 
@@ -164,15 +174,15 @@ REST_FRAMEWORK = {
 }
 
 AUTH_TOKEN_EXPIRY = timedelta(
-    seconds=int(os.environ.get("AUTH_TOKEN_EXPIRY_SECONDS", 0)),
-    minutes=int(os.environ.get("AUTH_TOKEN_EXPIRY_MINUTES", 0)),
-    hours=int(os.environ.get("AUTH_TOKEN_EXPIRY_HOURS", 0)),
-    days=int(os.environ.get("AUTH_TOKEN_EXPIRY_DAYS", 0))
+    seconds=env.int("AUTH_TOKEN_EXPIRY_SECONDS", 0),
+    minutes=env.int("AUTH_TOKEN_EXPIRY_MINUTES", 0),
+    hours=env.int("AUTH_TOKEN_EXPIRY_HOURS", 0),
+    days=env.int("AUTH_TOKEN_EXPIRY_DAYS", 0)
 )
 
 
 # Django Cors Headers
 # https://pypi.org/project/django-cors-headers/
 
-CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
-CORS_ALLOW_ALL_ORIGINS = bool(os.environ.get("CORS_ALLOW_ALL_ORIGINS"))
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
+CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS")
