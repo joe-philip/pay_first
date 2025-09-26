@@ -82,13 +82,15 @@ class PaymentSources(models.Model):
 
 
 class Transactions(models.Model):
-    label = models.CharField()
+    label = models.CharField(max_length=50)
     contact = models.ForeignKey(
         Contacts,
         related_name="transactions",
         on_delete=models.CASCADE
     )
-    _type = models.CharField(choices=TransactionTypeChoices.choices)
+    _type = models.CharField(
+        max_length=10, choices=TransactionTypeChoices.choices
+    )
     amount = models.FloatField()
     description = models.TextField(blank=True)
     return_date = models.DateTimeField(null=True)
@@ -119,7 +121,7 @@ class Transactions(models.Model):
 
 
 class Repayments(models.Model):
-    label = models.CharField()
+    label = models.CharField(max_length=50)
     transaction = models.ForeignKey(
         Transactions, related_name="repayments", on_delete=models.CASCADE
     )
