@@ -188,3 +188,9 @@ AUTH_TOKEN_EXPIRY = timedelta(
 
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS")
+
+
+# https://docs.djangoproject.com/en/5.2/topics/files/#managing-files
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
