@@ -6,6 +6,7 @@ from rest_framework.request import Request
 
 from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources,
                      Repayments, Transactions)
+from .utils import create_contacts_from_csv_file
 
 
 class ContactGroupSerializer(serializers.ModelSerializer):
@@ -189,3 +190,15 @@ class PaymentSourcesSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         kwargs["owner"] = self.context["request"].user
         return super().save(**kwargs)
+
+
+class ImportContactsSerializer(serializers.Serializer):
+    _type = serializers.ChoiceField(choices=[["google", "google"]])
+    file = serializers.FileField()
+
+    def save(self, **kwargs):
+        request = self.context["request"]
+        file: Request = request.FILES["file"]
+        user = request.user
+        _, errors = create_contacts_from_csv_file(file, user)
+        return errors
