@@ -172,7 +172,15 @@ REST_FRAMEWORK = {
     "ORDERING_PARAM": "ordering",
 
     'DEFAULT_PAGINATION_CLASS': 'root.utils.filters.pagination.URLPagination',
-    "PAGE_SIZE": 10
+    "PAGE_SIZE": 10,
+
+    # AcceptHeaderVersioning
+    # https://www.django-rest-framework.org/api-guide/versioning/#acceptheaderversioning
+
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.AcceptHeaderVersioning",
+    "DEFAULT_VERSION": "3.0",
+    "ALLOWED_VERSIONS": ["3.0"],
+    "VERSION_PARAM": "version"
 }
 
 AUTH_TOKEN_EXPIRY = timedelta(
