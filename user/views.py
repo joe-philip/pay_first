@@ -1,15 +1,19 @@
 from django.db.models import Q, QuerySet
+from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources,
                      Repayments, Transactions)
 from .permissions import (IsAdminPaymentMethod, IsContactGroupOwner,
-                          IsContactOwner, IsOwnPaymentMethod, IsOwnPaymentSource, IsOwnRepayment,
-                          IsOwnTransaction)
+                          IsContactOwner, IsOwnPaymentMethod,
+                          IsOwnPaymentSource, IsOwnRepayment, IsOwnTransaction)
 from .serializers import (ContactGroupSerializer, ContactsSerializer,
-                          PaymentMethodSerializer, PaymentSourcesSerializer,
-                          RepaymentsSerializer, TransactionsSerializer)
+                          ImportContactsSerializer, PaymentMethodSerializer,
+                          PaymentSourcesSerializer, RepaymentsSerializer,
+                          TransactionsSerializer)
 
 # Create your views here.
 
@@ -86,3 +90,16 @@ class PaymentSourceViewSet(ModelViewSet):
 
     def get_queryset(self) -> QuerySet[PaymentSources]:
         return PaymentSources.objects.filter(owner=self.request.user)
+
+
+class ImportContactsFromCSVAPI(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request: Request) -> Response:
+        serializer = ImportContactsSerializer(
+            data=request.data,
+            context={"request": request, "view": self}
+        )
+        serializer.is_valid(raise_exception=True)
+        status = serializer.save()
+        return Response(status, status=201)
