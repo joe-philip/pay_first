@@ -4,8 +4,11 @@ from django.db.models import QuerySet
 from rest_framework import serializers
 from rest_framework.request import Request
 
+from root.utils.models import DEFAULT_READ_ONLY_FIELDS
+
 from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources,
                      Repayments, Transactions)
+from .utils import create_contacts_from_csv_file
 
 
 class ContactGroupSerializer(serializers.ModelSerializer):
@@ -36,7 +39,7 @@ class ContactGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactGroup
         fields = '__all__'
-        read_only_fields = ('owner',)
+        read_only_fields = ('owner', *DEFAULT_READ_ONLY_FIELDS)
 
     def save(self, **kwargs):
         request = self.context.get('request')
@@ -57,7 +60,7 @@ class ContactsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contacts
         fields = "__all__"
-        read_only_fields = ("owner",)
+        read_only_fields = ("owner", *DEFAULT_READ_ONLY_FIELDS)
         extra_kwargs = {
             "groups": {"allow_empty": True}
         }
@@ -107,6 +110,7 @@ class TransactionsSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "payment_method": {"allow_null": True}
         }
+        read_only_fields = DEFAULT_READ_ONLY_FIELDS
 
 
 class RepaymentsSerializer(serializers.ModelSerializer):
@@ -124,13 +128,14 @@ class RepaymentsSerializer(serializers.ModelSerializer):
         model = Repayments
         fields = '__all__'
         extra_kwargs = {"payment_method": {"allow_null": True}}
+        read_only_fields = DEFAULT_READ_ONLY_FIELDS
 
 
 class PaymentMethodSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentMethods
         fields = "__all__"
-        read_only_fields = ("owner", "is_common")
+        read_only_fields = ("owner", "is_common", *DEFAULT_READ_ONLY_FIELDS)
         extra_kwargs = {"is_default": {"required": True, "allow_null": True}}
 
     def validate_label(self, value: str) -> str:
@@ -184,8 +189,20 @@ class PaymentSourcesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentSources
         fields = "__all__"
-        read_only_fields = ("owner",)
+        read_only_fields = ("owner", *DEFAULT_READ_ONLY_FIELDS)
 
     def save(self, **kwargs):
         kwargs["owner"] = self.context["request"].user
         return super().save(**kwargs)
+
+
+class ImportContactsSerializer(serializers.Serializer):
+    _type = serializers.ChoiceField(choices=[["google", "google"]])
+    file = serializers.FileField()
+
+    def save(self, **kwargs):
+        request = self.context["request"]
+        file: Request = request.FILES["file"]
+        user = request.user
+        _, errors = create_contacts_from_csv_file(file, user)
+        return errors

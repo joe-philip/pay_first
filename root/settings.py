@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from pymysql import install_as_MySQLdb
 import os
 from datetime import timedelta
 from pathlib import Path
@@ -20,8 +21,6 @@ env = Env(
     # set casting, default value
     DEBUG=(bool, False)
 )
-
-from pymysql import install_as_MySQLdb
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -145,6 +144,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATIC_ROOT = os.path.join(BASE_DIR, "assets")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -170,7 +171,15 @@ REST_FRAMEWORK = {
     "ORDERING_PARAM": "ordering",
 
     'DEFAULT_PAGINATION_CLASS': 'root.utils.filters.pagination.URLPagination',
-    "PAGE_SIZE": 10
+    "PAGE_SIZE": 10,
+
+    # AcceptHeaderVersioning
+    # https://www.django-rest-framework.org/api-guide/versioning/#acceptheaderversioning
+
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.AcceptHeaderVersioning",
+    "DEFAULT_VERSION": "4.0",
+    "ALLOWED_VERSIONS": ["4.0"],
+    "VERSION_PARAM": "version"
 }
 
 AUTH_TOKEN_EXPIRY = timedelta(
@@ -186,3 +195,54 @@ AUTH_TOKEN_EXPIRY = timedelta(
 
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS")
+
+
+# https://docs.djangoproject.com/en/5.2/topics/files/#managing-files
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+# Logging
+# https://docs.djangoproject.com/en/5.2/topics/logging/
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} [{name}] {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'logs/django_app.log',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'myapp': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}

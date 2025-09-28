@@ -9,3 +9,5 @@ __pycache__
 **/migrations/[0-9]*.py
 docker-compose.yaml
 Dockerfile
+assets
+logs
