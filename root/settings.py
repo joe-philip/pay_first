@@ -178,8 +178,8 @@ REST_FRAMEWORK = {
     # https://www.django-rest-framework.org/api-guide/versioning/#acceptheaderversioning
 
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.AcceptHeaderVersioning",
-    "DEFAULT_VERSION": "3.0",
-    "ALLOWED_VERSIONS": ["3.0"],
+    "DEFAULT_VERSION": "4.0",
+    "ALLOWED_VERSIONS": ["4.0"],
     "VERSION_PARAM": "version"
 }
 
