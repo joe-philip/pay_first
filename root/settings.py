@@ -225,7 +225,7 @@ LOGGING = {
         },
         'file': {
             'class': 'logging.FileHandler',
-            'filename': 'logs/django_app.log',
+            'filename': os.path.join(BASE_DIR, 'logs/django_app.log'),
             'formatter': 'verbose',
         },
     },
