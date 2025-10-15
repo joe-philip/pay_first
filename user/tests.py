@@ -1529,8 +1529,7 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
             content_type="application/json",
             **self.headers
         )
-        assert response.status_code == 400
-        assert "transaction_reference" in response.data["error"]
+        assert response.status_code == 201
 
     def test_create_repayment_without_payment_source(self):
         data = deepcopy(self.payload)

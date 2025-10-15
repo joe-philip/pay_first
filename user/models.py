@@ -133,7 +133,7 @@ class Repayments(MetaModel):
         PaymentMethods, on_delete=models.PROTECT
     )
     transaction_reference = models.TextField(
-        null=True, help_text="Optional reference ID for this transaction"
+        null=True, blank=True, help_text="Optional reference ID for this transaction"
     )
     payment_source = models.ForeignKey(
         PaymentSources, on_delete=models.SET_NULL,
