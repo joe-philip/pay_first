@@ -1,3 +1,7 @@
+from datetime import datetime, timedelta
+
+from django.conf import settings
+from pytz import timezone
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import View
@@ -37,6 +41,26 @@ class IsOwnTransaction(BasePermission):
         return obj.contact.owner == request.user
 
 
+class CanUpdateTransaction(BasePermission):
+    """
+    Permission class to determine if a transaction can be updated.
+
+    Allows updates (PUT requests) only if:
+    - The transaction's `pending_amount` is truthy, or
+    - If `pending_amount` is falsy, the transaction's `updated_at` timestamp is not older than 30 days from today.
+
+    Returns False if the transaction has no pending amount and was last updated more than 30 days ago.
+    """
+    # TODO: Implement test cases to test this functionality
+
+    def has_object_permission(self, request: Request, view: View, obj: Transactions):
+        if request.method == "PUT":
+            if not bool(obj.pending_amount):
+                if (obj.updated_at + timedelta(days=30)) < datetime.now(tz=timezone(settings.TIME_ZONE)):
+                    return False
+        return True
+
+
 class IsOwnRepayment(BasePermission):
     """
     Permission class to check if the requesting user is the owner of the repayment.
@@ -58,6 +82,24 @@ class IsOwnRepayment(BasePermission):
 
     def has_object_permission(self, request: Request, view: View, obj: Repayments) -> bool:
         return obj.transaction.contact.owner == request.user
+
+
+class CanUpdateRepayment(BasePermission):
+    """
+    Permission class that allows updating a Repayments object only if it was last updated within the past 30 days.
+
+    Methods:
+        has_object_permission(request, view, obj):
+            Returns True if the request method is not PUT, or if the Repayments object's updated_at timestamp is within 30 days from today.
+            Returns False if attempting to update (PUT) and the object was last updated more than 30 days ago.
+    """
+    # TODO: Implement test cases to test this functionality
+
+    def has_object_permission(self, request: Request, view: View, obj: Repayments):
+        if request.method == "PUT":
+            if (obj.updated_at + timedelta(days=30)) < datetime.now(tz=timezone(settings.TIME_ZONE)):
+                return False
+        return True
 
 
 class IsOwnPaymentMethod(BasePermission):
