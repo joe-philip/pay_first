@@ -7,7 +7,8 @@ from rest_framework.viewsets import ModelViewSet
 
 from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources,
                      Repayments, Transactions)
-from .permissions import (IsAdminPaymentMethod, IsContactGroupOwner,
+from .permissions import (CanUpdateRepayment, CanUpdateTransaction,
+                          IsAdminPaymentMethod, IsContactGroupOwner,
                           IsContactOwner, IsOwnPaymentMethod,
                           IsOwnPaymentSource, IsOwnRepayment, IsOwnTransaction)
 from .serializers import (ContactGroupSerializer, ContactsSerializer,
@@ -43,7 +44,7 @@ class ContactsViewSet(ModelViewSet):
 
 class TransactionsViewSet(ModelViewSet):
     serializer_class = TransactionsSerializer
-    permission_classes = (IsAuthenticated, IsOwnTransaction)
+    permission_classes = (IsAuthenticated, IsOwnTransaction, CanUpdateTransaction)
     search_fields = ("label", "contact__name")
     ordering = ("id",)
 
@@ -53,7 +54,7 @@ class TransactionsViewSet(ModelViewSet):
 
 class RepymentsViewSet(ModelViewSet):
     serializer_class = RepaymentsSerializer
-    permission_classes = (IsAuthenticated, IsOwnRepayment)
+    permission_classes = (IsAuthenticated, IsOwnRepayment, CanUpdateRepayment)
     search_fields = (
         "label", "transaction__label",
         "transaction__contact__name"
