@@ -88,6 +88,11 @@ class TransactionsSerializer(serializers.ModelSerializer):
     repayments = serializers.SerializerMethodField()
     pending_amount = serializers.SerializerMethodField()
 
+    def validate_contact(self, value: Contacts) -> Contacts:
+        if value.owner == self.context.get("request").user:
+            return value
+        raise serializers.ValidationError("Invalid contact")
+
     def validate_payment_method(self, value: PaymentMethods):
         if not value:
             default_payment_method = PaymentMethods.objects.filter(
@@ -104,6 +109,17 @@ class TransactionsSerializer(serializers.ModelSerializer):
     def get_pending_amount(self, instance: Transactions) -> float:
         return instance.pending_amount
 
+    def validate_amount(self, value: float) -> float:
+        if value < 0:
+            raise serializers.ValidationError("Enter valid amount")
+        if instance := getattr(self, "instance", None):
+            repayment_amount = sum(instance.repayments.values_list("amount", flat=True))
+            if value < repayment_amount:
+                raise serializers.ValidationError(
+                    "Amount should not exceed repayment_amount"
+                )
+        return value
+
     class Meta:
         model = Transactions
         fields = '__all__'
@@ -114,6 +130,11 @@ class TransactionsSerializer(serializers.ModelSerializer):
 
 
 class RepaymentsSerializer(serializers.ModelSerializer):
+    def validate_transaction(self, value: Transactions) -> Transactions:
+        if value.contact.owner == self.context.get("request").user:
+            return value
+        raise serializers.ValidationError("Invalid transaction")
+
     def validate_payment_method(self, value: PaymentMethods):
         if not value:
             default_payment_method = PaymentMethods.objects.filter(
@@ -127,7 +148,10 @@ class RepaymentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Repayments
         fields = '__all__'
-        extra_kwargs = {"payment_method": {"allow_null": True}}
+        extra_kwargs = {
+            "payment_method": {"allow_null": True},
+            "transaction_reference": {"allow_null": True, "allow_blank": True}
+        }
         read_only_fields = DEFAULT_READ_ONLY_FIELDS
 
 
