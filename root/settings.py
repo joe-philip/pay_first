@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-from pymysql import install_as_MySQLdb
 import os
 from datetime import timedelta
 from pathlib import Path
@@ -93,15 +92,14 @@ WSGI_APPLICATION = "root.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-install_as_MySQLdb()
-
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": env("DB"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("MYSQL_ROOT_PASSWORD"),
-        'HOST': env("DB_HOST")
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("POSTGRES_DB", default="postgres"),
+        "USER": env("POSTGRES_USER", default="postgres"),
+        "PASSWORD": env("POSTGRES_PASSWORD", default="postgres"),
+        "HOST": env("DB_HOST", default="db"),
+        "PORT": env.int("DB_PORT", 5432),
     }
 }
 
