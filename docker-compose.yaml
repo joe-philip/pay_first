@@ -2,13 +2,13 @@ version: "3.9"
 
 services:
   db:
-    image: mysql:9.4.0
+    image: postgres:16
     env_file:
       - ./.env
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "3306:3306"
+      - "5432:5432"
     networks:
       - pay-first-network
 
@@ -45,6 +45,6 @@ services:
       - pay-first-network
 
 volumes:
-  mysql_data:
+  postgres_data:
 networks:
   pay-first-network:

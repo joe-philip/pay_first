@@ -101,6 +101,13 @@
    CORS_ALLOWED_ORIGINS=http://127.0.0.1:3000,http://localhost:3000
    CORS_ALLOW_ALL_ORIGINS=0
    ```
+  
+      Tip: you can copy the provided example file and update values:
+
+      ```bash
+      cp .env.example .env
+      # then edit .env to set secure passwords / secrets
+      ```
 6. Start the app with:
 
    ```bash
