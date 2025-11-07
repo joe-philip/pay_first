@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 
+from main.models import ModuleInfo
+
 from .validators import is_email_format, user_exists, validate_password
 
 
@@ -120,3 +122,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'first_name', 'last_name')
+
+
+class MetaAPISerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ModuleInfo
+        exclude = ('model', "created_at", "updated_at")
