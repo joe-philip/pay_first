@@ -3,17 +3,19 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 
+from main.models import ModuleInfo
 from main.utils import is_auth_token_expired
 
 from .serializers import (ChangePasswordSerializer, LoginSerializer,
-                          SignupAPISerializer, UserProfileSerializer)
+                          MetaAPISerializer, SignupAPISerializer,
+                          UserProfileSerializer)
 
 # Create your views here.
 
@@ -70,3 +72,8 @@ class UserProfileAPIView(RetrieveAPIView):
 
     def get_object(self) -> User:
         return self.request.user
+
+
+class MetaAPIView(ListAPIView):
+    serializer_class = MetaAPISerializer
+    queryset = ModuleInfo.objects.filter(is_active=True).order_by('created_at')

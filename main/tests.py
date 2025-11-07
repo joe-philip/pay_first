@@ -19,7 +19,7 @@ def load_fixture(django_db_blocker):
     with django_db_blocker.unblock():
         call_command(
             "loaddata", "main/fixtures/user.json",
-            "user/fixtures/payment_methods.json"
+            "user/fixtures/payment_methods.json", "main/fixtures/module_info.json"
         )
 
 
@@ -608,3 +608,26 @@ class ProfileAPITestCase(APITestCase, BasicTestsMixin):
             response.status_code == 401
         ), "Expected status code 401 for unauthorized access"
         assert "error" in response.data, "Expected 'error' field in error response"
+class MetaAPITestCase(APITestCase, BasicTestsMixin):
+    """
+    Meta API Test case
+    """
+    def setUp(self):
+        self.BASE_URL = "/meta"
+        return super().setUp()
+
+    def test_meta_api_success(self):
+        """
+        Tests the meta API endpoint for a successful response.
+
+        This test sends a GET request to the meta API endpoint.
+        It asserts that the response status code is 200 (OK) and that the returned data
+        contains expected keys.
+
+        Assertions:
+            - The response status code is 200.
+            - The response data contains expected keys.
+        """
+        response = self.client.get(self.BASE_URL)
+        assert response.status_code == 200, "Expected api status code be 200"
+        assert len(response.data) == 6, "Expected 6 active modules in response"

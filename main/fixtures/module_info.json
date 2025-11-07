@@ -1,0 +1,98 @@
+[
+{
+    "model": "main.moduleinfo",
+    "pk": 1,
+    "fields": {
+        "created_at": "2025-11-07T17:05:43.555Z",
+        "updated_at": "2025-11-07T17:16:08.443Z",
+        "name": "Contact Group",
+        "name_plural": "Contact Groups",
+        "model": [
+            "user",
+            "contactgroup"
+        ],
+        "description": "The ContactGroups model in the Pay Buddy application serves as a foundational component for organizing and managing user contacts efficiently. This model allows users to create and maintain groups of contacts, making it easier to categorize and manage multiple contacts under a single group entity. Additionally, the model supports nested grouping, enabling users to add sub-contact groups within a primary contact group for better hierarchical structuring. This flexible design facilitates seamless grouping, retrieval, and management of contacts—laying the groundwork for efficient communication, payment grouping, and other group-based functionalities within the Pay Buddy ecosystem.",
+        "is_active": true
+    }
+},
+{
+    "model": "main.moduleinfo",
+    "pk": 2,
+    "fields": {
+        "created_at": "2025-11-07T17:10:06.242Z",
+        "updated_at": "2025-11-07T17:15:57.340Z",
+        "name": "Contact",
+        "name_plural": "Contacts",
+        "model": [
+            "user",
+            "contacts"
+        ],
+        "description": "The Contact model in the *Pay Buddy* application is designed to store and manage individual contact information that forms the core of user interactions within the system. Each contact represents a unique user or entity with whom financial transactions or communications can occur. The model typically includes essential details such as the contact’s name, phone number, email, and other relevant identifiers. Contacts can be associated with one or more ContactGroups, enabling flexible categorization and streamlined access. This module plays a crucial role in building the user’s contact network, supporting quick lookups, efficient group-based operations, and personalized interactions across various features of the Pay Buddy platform.",
+        "is_active": true
+    }
+},
+{
+    "model": "main.moduleinfo",
+    "pk": 3,
+    "fields": {
+        "created_at": "2025-11-07T17:15:42.189Z",
+        "updated_at": "2025-11-07T17:15:42.190Z",
+        "name": "Payment Method",
+        "name_plural": "Payment Methods",
+        "model": [
+            "user",
+            "paymentmethods"
+        ],
+        "description": "The PaymentMethod model in the Pay Buddy application is designed to store and manage the various payment options a user utilizes for transactions. This module provides a unified structure to record details of different payment methods such as UPI, liquid cash, bank accounts, debit/credit cards, or any other supported payment types.",
+        "is_active": true
+    }
+},
+{
+    "model": "main.moduleinfo",
+    "pk": 4,
+    "fields": {
+        "created_at": "2025-11-07T17:22:21.343Z",
+        "updated_at": "2025-11-07T17:22:21.343Z",
+        "name": "Payment Source",
+        "name_plural": "Payment Sources",
+        "model": [
+            "user",
+            "paymentsources"
+        ],
+        "description": "The Payment Source model in the Pay Buddy application is responsible for managing and organizing the sources from which payments originate. Each payment source represents a specific origin of funds — such as a names of the bank accounts of user like salary account of savings accounts or even liquid cash — that a user can use to make transactions. This model helps users clearly define and differentiate between their financial sources, allowing for more accurate tracking and reporting of payments. By linking payment sources with corresponding payment methods, it ensures a structured and transparent flow of funds within the system. The Payment source module thus enhances financial clarity, making it easier for users to manage multiple accounts and maintain better control over their spending within the Pay Buddy platform.",
+        "is_active": true
+    }
+},
+{
+    "model": "main.moduleinfo",
+    "pk": 5,
+    "fields": {
+        "created_at": "2025-11-07T17:26:32.428Z",
+        "updated_at": "2025-11-07T17:28:08.545Z",
+        "name": "Transaction",
+        "name_plural": "Transactions",
+        "model": [
+            "user",
+            "transactions"
+        ],
+        "description": "The Transaction model in the Pay Buddy application serves as the central component for recording and managing all financial transactions made between the user and their contacts. Each transaction entry captures comprehensive details such as the label (a short description of the transaction), contact (the individual involved), amount, payment source, and payment method used. Additionally, it includes an optional repayment date field to support deferred or credit-based transactions, along with a type field that classifies the transaction as either credit or debit. This model ensures clear and structured tracking of every financial interaction, enabling users to maintain a transparent record of their payments and dues. By integrating with other modules like Contacts, Payment sources, and Payment methods, the Transaction module forms the backbone of the financial management system within the Pay Buddy application.",
+        "is_active": true
+    }
+},
+{
+    "model": "main.moduleinfo",
+    "pk": 6,
+    "fields": {
+        "created_at": "2025-11-07T17:32:16.288Z",
+        "updated_at": "2025-11-07T17:32:16.288Z",
+        "name": "Repayment",
+        "name_plural": "Repayments",
+        "model": [
+            "user",
+            "repayments"
+        ],
+        "description": "The Repayment module is designed to handle and track partial or full repayments made toward an existing transaction. Each repayment record includes key details such as the label (a short description), amount, transaction (the original transaction being repaid), payment method, and payment source. Since a single transaction may be settled over multiple payments, this model allows multiple repayment entries to be linked to a single transaction, ensuring that every installment is properly recorded. Once the total sum of repayments matches the original transaction amount, the system can mark the transaction as fully repaid. This module provides users with precise insight into their outstanding dues and repayment progress, enhancing financial transparency and control within the Pay Buddy application.",
+        "is_active": true
+    }
+}
+]
