@@ -76,4 +76,4 @@ class UserProfileAPIView(RetrieveAPIView):
 
 class MetaAPIView(ListAPIView):
     serializer_class = MetaAPISerializer
-    queryset = ModuleInfo.objects.filter(is_active=True)
+    queryset = ModuleInfo.objects.filter(is_active=True).order_by('created_at')
