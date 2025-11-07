@@ -18,4 +18,8 @@ urlpatterns = [
         "profile", views.UserProfileAPIView.as_view(),
         name="profile"
     ),
+    path(
+        "meta", views.MetaAPIView.as_view(),
+        name="meta"
+    )
 ]
