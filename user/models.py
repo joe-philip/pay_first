@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -15,7 +16,7 @@ def validate_contact_data_is_json_format(value) -> None:
 class ContactGroup(MetaModel):
     name = models.CharField(max_length=255)
     owner = models.ForeignKey(
-        "auth.User",
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="contact_groups"
     )
@@ -38,7 +39,7 @@ class ContactGroup(MetaModel):
 class Contacts(MetaModel):
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(
-        "auth.User",
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="contacts"
     )
@@ -60,7 +61,10 @@ class PaymentMethods(MetaModel):
     label = models.CharField(max_length=50)
     is_default = models.BooleanField(default=False)
     is_common = models.BooleanField(default=False)
-    owner = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         db_table = "payment_methods"
@@ -72,7 +76,10 @@ class PaymentMethods(MetaModel):
 
 class PaymentSources(MetaModel):
     label = models.CharField(max_length=50)
-    owner = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
 
     def __str__(self) -> str: return self.label
 
