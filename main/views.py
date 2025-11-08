@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -25,6 +25,8 @@ from .serializers import (ChangePasswordSerializer, ForgotPasswordSerializer,
                           UserProfileSerializer)
 
 # Create your views here.
+
+User = get_user_model()
 
 
 class SignupAPIView(APIView):

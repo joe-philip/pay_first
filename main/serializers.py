@@ -1,5 +1,4 @@
-from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -10,6 +9,8 @@ from rest_framework.exceptions import AuthenticationFailed
 from main.models import ModuleInfo
 
 from .validators import is_email_format, user_exists, validate_password
+
+User = get_user_model()
 
 
 class SignupAPISerializer(serializers.ModelSerializer):
