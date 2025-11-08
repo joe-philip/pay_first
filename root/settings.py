@@ -261,3 +261,8 @@ RESET_PASSWORD_URL = env(
     "RESET_PASSWORD_URL",
     default="http://localhost:3000/reset-password/?uid={uid}&token={token}"
 )
+
+# Custom User Model
+# https://docs.djangoproject.com/en/5.2/topics/auth/customizing/#substituting-a-custom-user-model
+
+AUTH_USER_MODEL = 'main.User'
