@@ -1,8 +1,11 @@
-from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.exceptions import AuthenticationFailed
 
 from main.models import ModuleInfo
 
@@ -140,3 +143,29 @@ class ForgotPasswordSerializer(serializers.Serializer):
         if not user_exists(username=value):
             raise serializers.ValidationError('User does not exist')
         return value
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    _id = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_new_password(self, value: str) -> str:
+        validation_errors = validate_password(value)
+        if not validation_errors:
+            return value
+        raise serializers.ValidationError(validation_errors)
+
+    def validate(self, attrs):
+        try:
+            uid = force_str(urlsafe_base64_decode(attrs["_id"]))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            raise serializers.ValidationError("Invalid link.")
+
+        if not PasswordResetTokenGenerator().check_token(user, attrs["token"]):
+            raise serializers.ValidationError("Invalid or expired token.")
+
+        user.set_password(attrs["new_password"])
+        user.save()
+        return attrs
