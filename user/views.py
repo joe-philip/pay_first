@@ -1,8 +1,9 @@
-from django.db.models import Q, QuerySet
+from django.db.models import ExpressionWrapper, F, FloatField, Q, QuerySet, Sum
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources,
@@ -14,7 +15,7 @@ from .permissions import (CanUpdateRepayment, CanUpdateTransaction,
 from .serializers import (ContactGroupSerializer, ContactsSerializer,
                           ImportContactsSerializer, PaymentMethodSerializer,
                           PaymentSourcesSerializer, RepaymentsSerializer,
-                          TransactionsSerializer)
+                          SummarySerializer, TransactionsSerializer)
 
 # Create your views here.
 
@@ -44,7 +45,9 @@ class ContactsViewSet(ModelViewSet):
 
 class TransactionsViewSet(ModelViewSet):
     serializer_class = TransactionsSerializer
-    permission_classes = (IsAuthenticated, IsOwnTransaction, CanUpdateTransaction)
+    permission_classes = (
+        IsAuthenticated, IsOwnTransaction, CanUpdateTransaction
+    )
     search_fields = ("label", "contact__name")
     ordering = ("id",)
 
@@ -104,3 +107,28 @@ class ImportContactsFromCSVAPI(CreateAPIView):
         serializer.is_valid(raise_exception=True)
         status = serializer.save()
         return Response(status, status=201)
+
+
+class SummaryAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request: Request) -> Response:
+        contacts = (
+            Contacts.objects
+            .filter(owner=request.user)
+            .annotate(
+                total_transaction_amount=Sum("transactions__amount"),
+                total_repayment_amount=Sum("transactions__repayments__amount"),
+            )
+            .annotate(
+                pending_amount=ExpressionWrapper(
+                    F("total_transaction_amount") -
+                    F("total_repayment_amount"),
+                    output_field=FloatField(),
+                )
+            )
+            .filter(pending_amount__gt=0)
+            .order_by("-pending_amount")
+        )
+        serializer = SummarySerializer(contacts, many=True)
+        return Response(serializer.data)
