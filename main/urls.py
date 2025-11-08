@@ -21,5 +21,9 @@ urlpatterns = [
     path(
         "meta", views.MetaAPIView.as_view(),
         name="meta"
+    ),
+    path(
+        "forgot_password", views.ForgotPasswordAPIView.as_view(),
+        name="forgot_password"
     )
 ]
