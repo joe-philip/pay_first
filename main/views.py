@@ -21,7 +21,7 @@ from main.utils import is_auth_token_expired
 
 from .serializers import (ChangePasswordSerializer, ForgotPasswordSerializer,
                           LoginSerializer, MetaAPISerializer,
-                          SignupAPISerializer,
+                          ResetPasswordSerializer, SignupAPISerializer,
                           UserProfileSerializer)
 
 # Create your views here.
@@ -111,4 +111,11 @@ class ForgotPasswordAPIView(APIView):
             from_email=None,
             recipient_list=[user.username]
         )
+        return Response(status=204)
+
+
+class PasswordResetConfirmView(APIView):
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         return Response(status=204)
