@@ -2128,3 +2128,23 @@ class PaymentSourcesAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 404
 
     # Delete API Test Case End
+
+
+class SummaryAPITestCase(APITestCase, MainTestsMixin):
+    def setUp(self):
+        self.base_url = "/user/summary"
+        self.token = self.create_user_token()
+        self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
+        return super().setUp()
+
+    def test_summary_api_success(self):
+        owner = self.token.user
+        contact = self.create_contact(owner=owner)
+        self.create_credit_transaction(contact=contact, amount=100)
+        self.create_debit_transaction(contact=contact, amount=50)
+        response = self.client.get(
+            self.base_url,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 200
