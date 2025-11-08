@@ -1,6 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -13,8 +19,9 @@ from rest_framework.views import APIView
 from main.models import ModuleInfo
 from main.utils import is_auth_token_expired
 
-from .serializers import (ChangePasswordSerializer, LoginSerializer,
-                          MetaAPISerializer, SignupAPISerializer,
+from .serializers import (ChangePasswordSerializer, ForgotPasswordSerializer,
+                          LoginSerializer, MetaAPISerializer,
+                          SignupAPISerializer,
                           UserProfileSerializer)
 
 # Create your views here.
@@ -77,3 +84,31 @@ class UserProfileAPIView(RetrieveAPIView):
 class MetaAPIView(ListAPIView):
     serializer_class = MetaAPISerializer
     queryset = ModuleInfo.objects.filter(is_active=True).order_by('created_at')
+
+
+class ForgotPasswordAPIView(APIView):
+    def post(self, request: Request) -> Response:
+        serializer = ForgotPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = User.objects.filter(
+            username=serializer.validated_data['email'], is_active=True
+        ).first()
+        token = PasswordResetTokenGenerator().make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        reset_link = settings.RESET_PASSWORD_URL.format(uid=uid, token=token)
+        timeout = timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT)
+        send_mail(
+            subject="Paybuddy: Password Reset",
+            message="",
+            html_message=render_to_string(
+                "email/reset_password.html",
+                context={
+                    "user": user,
+                    "link": reset_link,
+                    "expiry": int(timeout.total_seconds() / 60),
+                }
+            ),
+            from_email=None,
+            recipient_list=[user.username]
+        )
+        return Response(status=204)
