@@ -74,7 +74,7 @@ ROOT_URLCONF = "root.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -244,3 +244,20 @@ LOGGING = {
         },
     },
 }
+
+# EMAIL Backend
+# https://docs.djangoproject.com/en/5.2/topics/email/#smtp-backend
+
+EMAIL_HOST = env("EMAIL_HOST", default="smtp-relay.brevo.com")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="9b0f6e001@smtp-brevo.com")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
+EMAIL_USE_TLS = True
+
+
+PASSWORD_RESET_TIMEOUT = env.int("RESET_PASSWORD_LINK_EXPIRY_MINUTES", default=900)
+RESET_PASSWORD_URL = env(
+    "RESET_PASSWORD_URL",
+    default="http://localhost:3000/reset-password/?uid={uid}&token={token}"
+)
