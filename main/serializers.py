@@ -128,3 +128,15 @@ class MetaAPISerializer(serializers.ModelSerializer):
     class Meta:
         model = ModuleInfo
         exclude = ('model', "created_at", "updated_at")
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value: str) -> str:
+        value = value.lower()
+        if not is_email_format(value):
+            raise serializers.ValidationError('Invalid email format')
+        if not user_exists(username=value):
+            raise serializers.ValidationError('User does not exist')
+        return value
