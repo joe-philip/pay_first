@@ -9,6 +9,8 @@ from rest_framework.exceptions import AuthenticationFailed
 from main.models import ModuleInfo
 from main.models import User as UserModel
 
+from main.models import ModuleInfo
+
 from .validators import is_email_format, user_exists, validate_password
 
 User = get_user_model()
@@ -133,7 +135,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class MetaAPISerializer(serializers.ModelSerializer):
     class Meta:
         model = ModuleInfo
-        exclude = ('model', "created_at", "updated_at")
+        depth = 1
+        exclude = ("created_at", "updated_at")
 
 
 class ForgotPasswordSerializer(serializers.Serializer):
