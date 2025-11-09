@@ -49,7 +49,8 @@ class BasicTestsMixin:
         Create a user and return the associated token.
         """
         if "user" not in kwargs:
-            kwargs["user"] = self.create_user(*args, **kwargs)
+            kwargs["user"] = self.create_user(
+                *args, **kwargs, email_verified=True)
         user = kwargs.pop("user")
         token, _ = Token.objects.get_or_create(user=user, defaults=kwargs)
         return token
@@ -88,7 +89,7 @@ class SignupAPITestCase(APITestCase, BasicTestsMixin):
         """
         Test that signup fails if the username already exists.
         """
-        self.create_user()
+        self.create_user(email_verified=True)
         payload = {
             "username": DEFAULT_USERNAME,
             "password": DEFAULT_PASSWORD,
@@ -268,7 +269,7 @@ class LoginAPITestCase(APITestCase, BasicTestsMixin):
     """
     def setUp(self):
         self.BASE_URL = "/login"
-        self.user = self.create_user()
+        self.user = self.create_user(email_verified=True)
         return super().setUp()
 
     def test_login_success(self):
@@ -351,7 +352,7 @@ class LogoutAPITestCase(APITestCase, BasicTestsMixin):
     """
     def setUp(self):
         self.BASE_URL = "/logout"
-        self.user = self.create_user()
+        self.user = self.create_user(email_verified=True)
         self.token = self.create_user_token(user=self.user)
         self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
         return super().setUp()

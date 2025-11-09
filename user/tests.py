@@ -48,7 +48,7 @@ class MainTestsMixin(BasicTestsMixin):
         if "name" not in kwargs:
             kwargs["name"] = DEFAULT_CONTACT_GROUP_NAME
         if "owner" not in kwargs:
-            kwargs["owner"] = self.create_user()
+            kwargs["owner"] = self.create_user(email_verified=True)
         name = kwargs.pop("name")
         contact_group, _ = ContactGroup.objects.get_or_create(
             name=name, defaults=kwargs
@@ -57,7 +57,7 @@ class MainTestsMixin(BasicTestsMixin):
 
     def create_contact(self, **kwargs) -> Contacts:
         groups = kwargs.pop('groups', [])
-        kwargs["owner"] = kwargs.get("owner", self.create_user())
+        kwargs["owner"] = kwargs.get("owner", self.create_user(email_verified=True))
         if (contact := Contacts.objects.filter(**kwargs, groups__in=groups)).exists():
             return contact.first()
         contact = Contacts.objects.create(**kwargs)
@@ -68,7 +68,7 @@ class MainTestsMixin(BasicTestsMixin):
 
     def create_payment_method(self, **kwargs) -> PaymentMethods:
         if "owner" not in kwargs:
-            kwargs["owner"] = self.create_user()
+            kwargs["owner"] = self.create_user(email_verified=True)
         if "label" not in kwargs:
             kwargs["label"] = DEFAULT_PAYMENT_METHOD_NAME
         if (instance := PaymentMethods.objects.filter(**kwargs)).exists():
@@ -120,7 +120,7 @@ class MainTestsMixin(BasicTestsMixin):
         if not "label" in kwargs:
             kwargs["label"] = DEFAULT_PAYMENT_SOURCE_LABEL
         if not "owner" in kwargs:
-            kwargs["owner"] = self.create_user()
+            kwargs["owner"] = self.create_user(email_verified=True)
         return PaymentSources.objects.create(**kwargs)
 
 
@@ -212,7 +212,7 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
         assert "name" in errors
 
     def test_contact_group_create_with_already_existing_contact_group_name_from_other_owner(self):
-        other_user = self.create_user(username="other_user@payfirst.com")
+        other_user = self.create_user(username="other_user@payfirst.com", email_verified=True)
         self.create_contact_group(owner=other_user)
         data = {
             "name": DEFAULT_CONTACT_GROUP_NAME
@@ -436,7 +436,7 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
 
     def test_update_with_existing_instance_name_from_other_owner(self):
         owner = self.token.user
-        other_owner = self.create_user(username="other_user@payfirst.com")
+        other_owner = self.create_user(username="other_user@payfirst.com", email_verified=True)
         instance = self.create_contact_group(owner=owner)
         second_instance = self.create_contact_group(
             owner=other_owner, name="Second Group"
@@ -479,7 +479,7 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 404
 
     def test_delete_api_with_other_owner_instance_id(self):
-        other_owner = self.create_user(username="otheruser@payfirst.com")
+        other_owner = self.create_user(username="otheruser@payfirst.com", email_verified=True)
         instance = self.create_contact_group(owner=other_owner)
         response = self.client.delete(
             self.base_url + f"/{instance.id}/",
@@ -611,7 +611,7 @@ class ContactsAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 201
 
     def test_contact_create_with_already_existing_contact_name_from_other_owner(self):
-        other_user = self.create_user(username="other_user@payfirst.com")
+        other_user = self.create_user(username="other_user@payfirst.com", email_verified=True)
         self.create_contact(owner=other_user)
         data = {
             "name": DEFAULT_CONTACT_SUB_GROUP_NAME,
@@ -854,7 +854,7 @@ class ContactsAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 404
 
     def test_contact_delete_api_with_other_owner_instance_id(self):
-        other_owner = self.create_user(username="otheruser@payfirst.com")
+        other_owner = self.create_user(username="otheruser@payfirst.com", email_verified=True)
         instance = self.create_contact_group(owner=other_owner)
         response = self.client.delete(
             self.base_url + f"/{instance.id}/",
@@ -1389,7 +1389,7 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         assert response.status_code == 404
 
     def test_transaction_delete_api_with_other_owner_instance_id(self):
-        other_owner = self.create_user(username="otheruser@payfirst.com")
+        other_owner = self.create_user(username="otheruser@payfirst.com", email_verified=True)
         other_owner_contact = self.create_contact(owner=other_owner)
         instance = self.create_debit_transaction(contact=other_owner_contact)
         response = self.client.delete(
