@@ -172,3 +172,22 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.set_password(attrs["new_password"])
         user.save()
         return attrs
+
+
+class EmailVerificationSerializer(serializers.Serializer):
+    _id = serializers.CharField()
+    token = serializers.CharField()
+
+    def validate(self, attrs):
+        user = self.context['user']
+        if user.email_verified:
+            raise serializers.ValidationError("Email is already verified.")
+        if not PasswordResetTokenGenerator().check_token(user, attrs["token"]):
+            raise serializers.ValidationError("Invalid or expired token.")
+        return attrs
+
+    def save(self, **kwargs) -> UserModel:
+        user = self.context['user']
+        user.email_verified = True
+        user.save()
+        return user
