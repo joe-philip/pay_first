@@ -44,7 +44,6 @@ class SignupAPIView(APIView):
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         link = settings.EMAIL_VERIFICATION_URL.format(uid=uid, token=token)
-        print(link)
         timeout = timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT)
         app_title = "PayBuddy"
         if app_settings:
