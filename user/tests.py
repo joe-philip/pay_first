@@ -207,7 +207,6 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
             **self.headers
         )
         response_data = response.json()
-        print(response_data)
         errors = response_data.get("error")
         assert response.status_code == 400
         assert "name" in errors
@@ -311,7 +310,6 @@ class ContactGroupsAPITestCase(APITestCase, MainTestsMixin):
             content_type="application/json",
             **self.headers
         )
-        print(response.data)
         assert response.status_code == 200
         assert len(response.data.get("results", [])) == 5
         assert response.data.get("results", [])[0]["name"] == "Group 6"
@@ -811,7 +809,6 @@ class ContactsAPITestCase(APITestCase, MainTestsMixin):
             content_type="application/json",
             **self.headers
         )
-        print(response.data)
         assert response.status_code == 200
 
     # # Update API Test Cases End

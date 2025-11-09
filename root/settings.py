@@ -256,8 +256,21 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 EMAIL_USE_TLS = True
 
 
-PASSWORD_RESET_TIMEOUT = env.int("RESET_PASSWORD_LINK_EXPIRY_MINUTES", default=900)
+PASSWORD_RESET_TIMEOUT = env.int(
+    "RESET_PASSWORD_LINK_EXPIRY_SECONDS", default=900
+)
 RESET_PASSWORD_URL = env(
     "RESET_PASSWORD_URL",
     default="http://localhost:3000/reset-password/?uid={uid}&token={token}"
+)
+
+# Custom User Model
+# https://docs.djangoproject.com/en/5.2/topics/auth/customizing/#substituting-a-custom-user-model
+
+AUTH_USER_MODEL = 'main.User'
+
+
+EMAIL_VERIFICATION_URL = env(
+    "EMAIL_VERIFICATION_URL",
+    default="http://localhost:3000/verify-email/?uid={uid}&token={token}"
 )

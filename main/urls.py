@@ -29,5 +29,13 @@ urlpatterns = [
     path(
         "reset_password", views.PasswordResetConfirmView.as_view(),
         name="reset_password"
+    ),
+    path(
+        "verify-email", views.EmailVerificationAPI.as_view(),
+        name="verify_email"
+    ),
+    path(
+        "resend_email", views.ResendVerificationEmailView.as_view(),
+        name="resend_email"
     )
 ]
