@@ -1,7 +1,7 @@
 from typing import Any
 
 
-def fail(error: str) -> dict:
+def fail(error: str, **kwargs) -> dict:
     """
     Returns a dictionary indicating a failed operation
     with a provided error message.
@@ -16,7 +16,8 @@ def fail(error: str) -> dict:
     return {
         'status': False,
         'message': 'fail',
-        'error': error
+        'error': error,
+        **kwargs
     }
 
 

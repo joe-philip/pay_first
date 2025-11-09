@@ -21,5 +21,21 @@ urlpatterns = [
     path(
         "meta", views.MetaAPIView.as_view(),
         name="meta"
+    ),
+    path(
+        "forgot_password", views.ForgotPasswordAPIView.as_view(),
+        name="forgot_password"
+    ),
+    path(
+        "reset_password", views.PasswordResetConfirmView.as_view(),
+        name="reset_password"
+    ),
+    path(
+        "verify-email", views.EmailVerificationAPI.as_view(),
+        name="verify_email"
+    ),
+    path(
+        "resend_email", views.ResendVerificationEmailView.as_view(),
+        name="resend_email"
     )
 ]

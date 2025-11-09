@@ -32,5 +32,6 @@ router.register(
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("import_contacts", views.ImportContactsFromCSVAPI.as_view())
+    path("import_contacts", views.ImportContactsFromCSVAPI.as_view()),
+    path("summary", views.SummaryAPIView.as_view())
 ]

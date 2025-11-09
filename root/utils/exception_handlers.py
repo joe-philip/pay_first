@@ -18,7 +18,9 @@ def exception_handler(exc: Exception, context: dict):
         Response: A response object containing the error details and appropriate HTTP status code.
     """
     if isinstance(exc, APIException):
-        return Response(fail(exc.detail), status=exc.status_code)
+        detail = exc.detail
+        code = getattr(detail, "code", "")
+        return Response(fail(exc.detail, code=code), status=exc.status_code)
     elif isinstance(exc, Http404):
         return Response(fail(str(exc)), status=404)
     elif isinstance(exc, ValidationError):

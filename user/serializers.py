@@ -113,7 +113,9 @@ class TransactionsSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError("Enter valid amount")
         if instance := getattr(self, "instance", None):
-            repayment_amount = sum(instance.repayments.values_list("amount", flat=True))
+            repayment_amount = sum(
+                instance.repayments.values_list("amount", flat=True)
+            )
             if value < repayment_amount:
                 raise serializers.ValidationError(
                     "Amount should not exceed repayment_amount"
@@ -230,3 +232,23 @@ class ImportContactsSerializer(serializers.Serializer):
         user = request.user
         _, errors = create_contacts_from_csv_file(file, user)
         return errors
+
+
+class SummarySerializer(serializers.ModelSerializer):
+    pending_amount = serializers.SerializerMethodField()
+    total_transaction_amount = serializers.SerializerMethodField()
+    total_repayment_amount = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Contacts
+        exclude = ("owner",)
+        depth = 1
+
+    def get_pending_amount(self, obj):
+        return getattr(obj, "pending_amount", 0)
+
+    def get_total_transaction_amount(self, obj):
+        return getattr(obj, "total_transaction_amount", 0)
+
+    def get_total_repayment_amount(self, obj):
+        return getattr(obj, "total_repayment_amount", 0)

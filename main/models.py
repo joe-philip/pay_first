@@ -1,8 +1,15 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from root.utils.models import MetaModel
 
 # Create your models here.
+
+
+class User(AbstractUser):
+    email_verified = models.BooleanField(default=False)
+
+    def __str__(self) -> str: return self.username
 
 
 class AppSettings(MetaModel):
