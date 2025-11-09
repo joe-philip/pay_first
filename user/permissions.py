@@ -6,6 +6,8 @@ from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import View
 
+from root.utils.error_codes import EMAIL_NOT_VERIFIED
+
 from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources,
                      Repayments, Transactions)
 
@@ -142,6 +144,8 @@ class IsEmailVerified(BasePermission):
         has_permission(request, view):
             Returns True if the user's email is verified, False otherwise.
     """
+    message = "Email is not verified."
+    code = EMAIL_NOT_VERIFIED
 
     def has_permission(self, request: Request, view: View) -> bool:
         return getattr(request.user, 'email_verified', False)
