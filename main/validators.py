@@ -1,12 +1,14 @@
 from re import match
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import (
     CommonPasswordValidator, MinimumLengthValidator, NumericPasswordValidator,
     UserAttributeSimilarityValidator)
 from django.core.exceptions import ValidationError
 
 from root.utils.password_validations import PasswordRegexValidator
+
+User = get_user_model()
 
 
 def is_email_format(value: str) -> bool:

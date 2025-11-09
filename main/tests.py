@@ -1,10 +1,12 @@
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from pytest import fixture
 from pytz import timezone
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
+
+User = get_user_model()
 
 # Create your tests here.
 
@@ -19,7 +21,7 @@ def load_fixture(django_db_blocker):
     with django_db_blocker.unblock():
         call_command(
             "loaddata", "main/fixtures/user.json",
-            "user/fixtures/payment_methods.json"
+            "user/fixtures/payment_methods.json", "main/fixtures/module_info.json"
         )
 
 
@@ -47,7 +49,8 @@ class BasicTestsMixin:
         Create a user and return the associated token.
         """
         if "user" not in kwargs:
-            kwargs["user"] = self.create_user(*args, **kwargs)
+            kwargs["user"] = self.create_user(
+                *args, **kwargs, email_verified=True)
         user = kwargs.pop("user")
         token, _ = Token.objects.get_or_create(user=user, defaults=kwargs)
         return token
@@ -86,7 +89,7 @@ class SignupAPITestCase(APITestCase, BasicTestsMixin):
         """
         Test that signup fails if the username already exists.
         """
-        self.create_user()
+        self.create_user(email_verified=True)
         payload = {
             "username": DEFAULT_USERNAME,
             "password": DEFAULT_PASSWORD,
@@ -266,7 +269,7 @@ class LoginAPITestCase(APITestCase, BasicTestsMixin):
     """
     def setUp(self):
         self.BASE_URL = "/login"
-        self.user = self.create_user()
+        self.user = self.create_user(email_verified=True)
         return super().setUp()
 
     def test_login_success(self):
@@ -349,7 +352,7 @@ class LogoutAPITestCase(APITestCase, BasicTestsMixin):
     """
     def setUp(self):
         self.BASE_URL = "/logout"
-        self.user = self.create_user()
+        self.user = self.create_user(email_verified=True)
         self.token = self.create_user_token(user=self.user)
         self.headers = {"HTTP_AUTHORIZATION": f"Token {self.token.key}"}
         return super().setUp()
@@ -608,3 +611,26 @@ class ProfileAPITestCase(APITestCase, BasicTestsMixin):
             response.status_code == 401
         ), "Expected status code 401 for unauthorized access"
         assert "error" in response.data, "Expected 'error' field in error response"
+class MetaAPITestCase(APITestCase, BasicTestsMixin):
+    """
+    Meta API Test case
+    """
+    def setUp(self):
+        self.BASE_URL = "/meta"
+        return super().setUp()
+
+    def test_meta_api_success(self):
+        """
+        Tests the meta API endpoint for a successful response.
+
+        This test sends a GET request to the meta API endpoint.
+        It asserts that the response status code is 200 (OK) and that the returned data
+        contains expected keys.
+
+        Assertions:
+            - The response status code is 200.
+            - The response data contains expected keys.
+        """
+        response = self.client.get(self.BASE_URL)
+        assert response.status_code == 200, "Expected api status code be 200"
+        assert len(response.data) == 6, "Expected 6 active modules in response"

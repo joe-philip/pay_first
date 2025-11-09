@@ -2,10 +2,12 @@ from csv import DictReader
 from datetime import datetime
 from io import TextIOWrapper
 
-from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.contrib.auth import get_user_model
 
 from user.models import ContactGroup, Contacts
+
+User = get_user_model()
 
 
 def create_contacts_from_csv_file(file: InMemoryUploadedFile, user: User):
