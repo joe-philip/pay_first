@@ -48,7 +48,7 @@ class SignupAPIView(APIView):
         timeout = timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT)
         app_title = "PayBuddy"
         if app_settings:
-            app_title = app_settings.app_title
+            app_title = app_settings.app_name
 
         send_mail(
             subject=f"{app_title}: Email Verification",
@@ -191,7 +191,7 @@ class ResendVerificationEmailView(APIView):
         app_title = "PayBuddy"
         app_settings = AppSettings.objects.last()
         if app_settings:
-            app_title = app_settings.app_title
+            app_title = app_settings.app_name
         send_mail(
             subject,
             message,
