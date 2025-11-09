@@ -191,3 +191,19 @@ class EmailVerificationSerializer(serializers.Serializer):
         user.email_verified = True
         user.save()
         return user
+
+
+class ResendVerificationEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value: str) -> str:
+        value = value.lower()
+        if not is_email_format(value):
+            raise serializers.ValidationError('Invalid email format')
+        try:
+            user = User.objects.get(username=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError('No user found with that email.')
+        if user.email_verified:
+            raise serializers.ValidationError('User already verified.')
+        return value
