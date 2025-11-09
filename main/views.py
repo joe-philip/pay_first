@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.auth.tokens import (PasswordResetTokenGenerator,
+                                        default_token_generator)
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_str
@@ -20,13 +21,15 @@ from rest_framework.views import APIView
 from main.models import AppSettings, ModuleInfo
 from main.models import User as UserModel
 from main.utils import is_auth_token_expired
+from root.utils.utils import is_token_expired
 
 from .serializers import (ChangePasswordSerializer,
                           EmailVerificationSerializer,
                           ForgotPasswordSerializer, LoginSerializer,
-                          MetaAPISerializer, ResetPasswordSerializer,
-                          SignupAPISerializer, UserProfileSerializer)
-from django.contrib.auth.tokens import default_token_generator
+                          MetaAPISerializer, ResendVerificationEmailSerializer,
+                          ResetPasswordSerializer, SignupAPISerializer,
+                          UserProfileSerializer)
+
 # Create your views here.
 
 User = get_user_model()
@@ -163,4 +166,41 @@ class EmailVerificationAPI(APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response(status=204)
+
+
+class ResendVerificationEmailView(APIView):
+    def post(self, request):
+        serializer = ResendVerificationEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = User.objects.get(username=serializer.validated_data['email'])
+        token = default_token_generator.make_token(user)
+        expired = is_token_expired(token)  # 24 hours
+        if expired:
+            token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        verification_link = settings.EMAIL_VERIFICATION_URL.format(
+            uid=uid, token=token)
+        subject = "Verify your email address"
+        message = f"Hi {user.username},\nClick below to verify your email:\n{verification_link}"
+        expiry = settings.PASSWORD_RESET_TIMEOUT // 3600
+        app_title = "PayBuddy"
+        app_settings = AppSettings.objects.last()
+        if app_settings:
+            app_title = app_settings.app_title
+        send_mail(
+            subject,
+            message,
+            None,
+            [user.username],
+            html_message=render_to_string(
+                "email/email_verify.html",
+                context={
+                    "user": user,
+                    "link": verification_link,
+                    "expiry": expiry,
+                    "app_title": app_title
+                }
+            )
+        )
         return Response(status=204)
