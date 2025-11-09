@@ -10,7 +10,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -21,6 +21,7 @@ from rest_framework.views import APIView
 from main.models import AppSettings, ModuleInfo
 from main.models import User as UserModel
 from main.utils import is_auth_token_expired
+from root.utils.error_codes import EMAIL_NOT_VERIFIED
 from root.utils.utils import is_token_expired
 
 from .serializers import (ChangePasswordSerializer,
@@ -75,6 +76,10 @@ class LoginAPIView(ObtainAuthToken):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+        if not user.email_verified:
+            raise PermissionDenied(
+                "Email is not verified.", code=EMAIL_NOT_VERIFIED
+            )
         token, created = Token.objects.get_or_create(user=user)
         if not created:
             if is_auth_token_expired(token):
