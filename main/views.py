@@ -9,6 +9,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -20,11 +21,12 @@ from main.models import AppSettings, ModuleInfo
 from main.models import User as UserModel
 from main.utils import is_auth_token_expired
 
-from .serializers import (ChangePasswordSerializer, ForgotPasswordSerializer,
-                          LoginSerializer, MetaAPISerializer,
-                          ResetPasswordSerializer, SignupAPISerializer,
-                          UserProfileSerializer)
-
+from .serializers import (ChangePasswordSerializer,
+                          EmailVerificationSerializer,
+                          ForgotPasswordSerializer, LoginSerializer,
+                          MetaAPISerializer, ResetPasswordSerializer,
+                          SignupAPISerializer, UserProfileSerializer)
+from django.contrib.auth.tokens import default_token_generator
 # Create your views here.
 
 User = get_user_model()
@@ -146,4 +148,19 @@ class PasswordResetConfirmView(APIView):
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        return Response(status=204)
+
+
+class EmailVerificationAPI(APIView):
+    def post(self, request: Request) -> Response:
+        uid = force_str(urlsafe_base64_decode(request.data.get("_id")))
+        user = User.objects.filter(pk=uid)
+        if not user.exists():
+            raise ValidationError("Invalid link.")
+        user = user.first()
+        serializer = EmailVerificationSerializer(
+            data=request.data, context={"user": user}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(status=204)
