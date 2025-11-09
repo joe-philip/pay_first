@@ -132,3 +132,16 @@ class IsAdminPaymentMethod(BasePermission):
 class IsOwnPaymentSource(BasePermission):
     def has_object_permission(self, request: Request, view: View, obj: PaymentSources) -> bool:
         return obj.owner == request.user
+
+
+class IsEmailVerified(BasePermission):
+    """
+    Permission class that grants access only if the requesting user's email is verified.
+
+    Methods:
+        has_permission(request, view):
+            Returns True if the user's email is verified, False otherwise.
+    """
+
+    def has_permission(self, request: Request, view: View) -> bool:
+        return getattr(request.user, 'email_verified', False)
