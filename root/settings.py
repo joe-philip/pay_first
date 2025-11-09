@@ -256,7 +256,9 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 EMAIL_USE_TLS = True
 
 
-PASSWORD_RESET_TIMEOUT = env.int("RESET_PASSWORD_LINK_EXPIRY_MINUTES", default=900)
+PASSWORD_RESET_TIMEOUT = env.int(
+    "RESET_PASSWORD_LINK_EXPIRY_SECONDS", default=900
+)
 RESET_PASSWORD_URL = env(
     "RESET_PASSWORD_URL",
     default="http://localhost:3000/reset-password/?uid={uid}&token={token}"

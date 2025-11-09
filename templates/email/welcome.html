@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confirm your email</title>
+
+  <style>
+    /* Reset / base */
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fb;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: #111827;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Container */
+    .email-wrap {
+      width: 100%;
+      padding: 32px 16px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+    }
+
+    .email-card {
+      width: 100%;
+      max-width: 600px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(16, 24, 40, 0.08);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eef2f7;
+    }
+
+    .brand {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .brand-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .content {
+      padding: 28px;
+      line-height: 1.5;
+      font-size: 16px;
+      color: #111827;
+    }
+
+    .greeting {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .lead {
+      margin: 0 0 18px 0;
+      color: #374151;
+      font-size: 15px;
+    }
+
+    .cta {
+      display: block;
+      margin: 18px 0;
+      text-align: center;
+    }
+
+    .button {
+      display: inline-block;
+      background: linear-gradient(90deg, #2563eb, #06b6d4);
+      color: #ffffff !important;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 16px;
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
+    }
+
+    .small {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .footer {
+      padding: 20px 28px;
+      border-top: 1px solid #eef2f7;
+      background: #fbfdff;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .muted {
+      color: #9ca3af;
+      font-size: 12px;
+    }
+
+    /* Mobile */
+    @media (max-width:420px) {
+      .content {
+        padding: 20px;
+      }
+
+      .header {
+        padding: 18px 20px;
+      }
+
+      .footer {
+        padding: 16px 20px;
+      }
+
+      .brand-name {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body class="activity-stream">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" class="email-wrap"
+    style="border-collapse:collapse;">
+    <tbody>
+      <tr>
+        <td align="center">
+          <table role="presentation" class="email-card" width="100%" cellspacing="0" cellpadding="0"
+            style="border-collapse:collapse;">
+            <tbody>
+              <tr>
+                <td class="header">
+                  <div class="brand" aria-hidden="true">PB</div>
+                  <div>
+                    <div class="brand-name">{{app_title}}</div>
+                    <div class="muted" style="font-size:12px;">Verify your email to finish signing up</div>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="content">
+                  <h1 class="greeting">Hi {{user.first_name}} {{user.last_name}},</h1>
+
+                  <p class="lead">
+                    Thanks for creating an account with <strong>{{app_title}}</strong>. Before you get started, please
+                    confirm your email address so we know it’s really you.
+                  </p>
+
+                  <div class="cta">
+                    <!-- Use the full URL here; many email clients prefer absolute links -->
+                    <a href="{{link}}" class="button" target="_blank" rel="noopener">Verify my email</a>
+                  </div>
+
+                  <p class="small">
+                    If the button above doesn't work, copy and paste the following link into your browser:
+                    <br>
+                    <a href="{{link}}" target="_blank" rel="noopener"
+                      style="word-break:break-all;color:#2563eb;">{{link}}</a>
+                  </p>
+
+                  <hr style="border:none;border-top:1px solid #eef2f7;margin:20px 0;">
+
+                  <p class="small">
+                    This link will expire in <strong>{{expiry}} hours</strong>. If you didn't create an account with us,
+                    you can safely ignore this email.
+                  </p>
+
+
+                </td>
+              </tr>
+
+
+
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+
+</body>
+
+</html>
