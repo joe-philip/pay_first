@@ -5,8 +5,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -16,7 +16,8 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 
-from main.models import ModuleInfo
+from main.models import AppSettings, ModuleInfo
+from main.models import User as UserModel
 from main.utils import is_auth_token_expired
 
 from .serializers import (ChangePasswordSerializer, ForgotPasswordSerializer,
@@ -33,7 +34,32 @@ class SignupAPIView(APIView):
     def post(self, request: Request) -> Response:
         serializer = SignupAPISerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        user = serializer.save()
+        app_settings = AppSettings.objects.last()
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        link = settings.EMAIL_VERIFICATION_URL.format(uid=uid, token=token)
+        print(link)
+        timeout = timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT)
+        app_title = "PayBuddy"
+        if app_settings:
+            app_title = app_settings.app_title
+
+        send_mail(
+            subject=f"{app_title}: Email Verification",
+            message="",
+            html_message=render_to_string(
+                "email/welcome.html",
+                context={
+                    "user": user,
+                    "link": link,
+                    "expiry": int(timeout.total_seconds() / 36e2),
+                    "app_title": app_title
+                }
+            ),
+            from_email=None,
+            recipient_list=[user.username]
+        )
         return Response(serializer.data, status=201)
 
 
@@ -79,7 +105,7 @@ class UserProfileAPIView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = User.objects.all()
 
-    def get_object(self) -> User:
+    def get_object(self) -> UserModel:
         return self.request.user
 
 

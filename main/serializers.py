@@ -7,6 +7,7 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.exceptions import AuthenticationFailed
 
 from main.models import ModuleInfo
+from main.models import User as UserModel
 
 from .validators import is_email_format, user_exists, validate_password
 
@@ -55,6 +56,7 @@ class SignupAPISerializer(serializers.ModelSerializer):
         user = super().save(**kwargs)
         user.set_password(self.validated_data.get('password'))
         user.save()
+        return user
 
 
 class LoginSerializer(AuthTokenSerializer):
@@ -88,7 +90,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
     )
 
     def validate_password(self, value: str) -> str:
-        user: User = self.context['request'].user
+        user: UserModel = self.context['request'].user
         if not user.check_password(value):
             raise serializers.ValidationError('Incorrect old password')
         return value
@@ -116,7 +118,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         }
 
     def save(self, **kwargs):
-        user: User = self.context['request'].user
+        user: UserModel = self.context['request'].user
         user.set_password(self.validated_data.get('new_password'))
         user.save()
         return user
