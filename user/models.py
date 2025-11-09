@@ -37,6 +37,7 @@ class ContactGroup(MetaModel):
 
 
 class Contacts(MetaModel):
+    picture = models.ImageField(upload_to='contacts/pictures/', null=True, blank=True)
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,

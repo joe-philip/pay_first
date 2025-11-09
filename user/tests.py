@@ -533,6 +533,25 @@ class ContactsAPITestCase(APITestCase, MainTestsMixin):
         assert response.data["name"] == DEFAULT_CONTACT_SUB_GROUP_NAME
         assert response.data["owner"] == owner.id
 
+    def test_contact_create_with_picture_field_none_success(self):
+        contact_group = self.create_contact_group()
+        owner = self.token.user
+        data = {
+            "name": DEFAULT_CONTACT_SUB_GROUP_NAME,
+            "groups": [contact_group.id],
+            "data": {},
+            "picture": None
+        }
+        response = self.client.post(
+            self.base_url + "/",
+            data,
+            content_type="application/json",
+            **self.headers
+        )
+        assert response.status_code == 201
+        assert response.data["name"] == DEFAULT_CONTACT_SUB_GROUP_NAME
+        assert response.data["owner"] == owner.id
+
     def test_contact_group_create_without_groups(self):
         owner = self.token.user
         data = {
