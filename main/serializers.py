@@ -135,7 +135,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class MetaAPISerializer(serializers.ModelSerializer):
     class Meta:
         model = ModuleInfo
-        exclude = ('model', "created_at", "updated_at")
+        depth = 1
+        exclude = ("created_at", "updated_at")
 
 
 class ForgotPasswordSerializer(serializers.Serializer):
