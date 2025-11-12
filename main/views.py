@@ -118,9 +118,15 @@ class UserProfileAPIView(RetrieveAPIView):
         return self.request.user
 
 
-class MetaAPIView(ListAPIView):
+class MetaAPIView(RetrieveAPIView):
     serializer_class = MetaAPISerializer
-    queryset = ModuleInfo.objects.filter(is_active=True).order_by('created_at')
+
+    def get_object(self) -> dict:
+        data = {
+            "app_settings": AppSettings.objects.last(),
+            "modules": ModuleInfo.objects.all()
+        }
+        return data
 
 
 class ForgotPasswordAPIView(APIView):

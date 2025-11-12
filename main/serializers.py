@@ -6,7 +6,7 @@ from rest_framework import serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.exceptions import AuthenticationFailed
 
-from main.models import ModuleInfo
+from main.models import AppSettings, ModuleInfo
 from main.models import User as UserModel
 
 from main.models import ModuleInfo
@@ -132,11 +132,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'first_name', 'last_name')
 
 
-class MetaAPISerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ModuleInfo
-        depth = 1
-        exclude = ("created_at", "updated_at")
+class MetaAPISerializer(serializers.Serializer):
+    class ModuleInfoSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = ModuleInfo
+            depth = 1
+            exclude = ("created_at", "updated_at")
+
+    class AppSettingsSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = AppSettings
+            exclude = ("created_at", "updated_at")
+    modules = ModuleInfoSerializer(many=True)
+    app_settings = AppSettingsSerializer()
 
 
 class ForgotPasswordSerializer(serializers.Serializer):
