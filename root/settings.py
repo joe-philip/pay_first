@@ -274,3 +274,17 @@ EMAIL_VERIFICATION_URL = env(
     "EMAIL_VERIFICATION_URL",
     default="http://localhost:3000/verify-email/?uid={uid}&token={token}"
 )
+
+# Cache Configuration
+# https://docs.djangoproject.com/en/5.2/ref/settings/#std-setting-CACHES
+
+REDIS_HOST = env("REDIS_HOST", default="localhost")
+REDIS_PORT = env.int("REDIS_PORT", default=6379)
+REDIS_CACHE_DB = env.int("REDIS_CACHE_DB", default=1)
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CACHE_DB}",
+    }
+}
