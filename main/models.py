@@ -19,6 +19,7 @@ class AppSettings(MetaModel):
     tag = models.CharField(max_length=50, help_text="Commit hash on tag")
     change_log = models.TextField()
     terms_and_conditions = models.TextField()
+    privacy_policy = models.TextField()
 
     class Meta:
         db_table = "app_settings"
