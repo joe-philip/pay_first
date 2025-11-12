@@ -6,8 +6,10 @@ from django.contrib.auth.tokens import (PasswordResetTokenGenerator,
                                         default_token_generator)
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.views.decorators.cache import cache_page
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -118,6 +120,7 @@ class UserProfileAPIView(RetrieveAPIView):
         return self.request.user
 
 
+@method_decorator(cache_page(timeout=None, key_prefix="meta_api"), name='dispatch')
 class MetaAPIView(RetrieveAPIView):
     serializer_class = MetaAPISerializer
 

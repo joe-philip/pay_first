@@ -1,6 +1,13 @@
 version: "3.9"
 
 services:
+  redis:
+    image: redis:8.2.3
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - pay-first-network
   db:
     image: postgres:16
     env_file:

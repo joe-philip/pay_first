@@ -2,8 +2,8 @@ from csv import DictReader
 from datetime import datetime
 from io import TextIOWrapper
 
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from user.models import ContactGroup, Contacts
 
