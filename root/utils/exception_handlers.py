@@ -1,3 +1,4 @@
+from smtplib import SMTPException
 from django.core.exceptions import ValidationError
 from django.http.response import Http404
 from rest_framework.exceptions import APIException
@@ -25,4 +26,6 @@ def exception_handler(exc: Exception, context: dict):
         return Response(fail(str(exc)), status=404)
     elif isinstance(exc, ValidationError):
         return Response(fail(getattr(exc, "message_dict", {})), status=400)
+    elif isinstance(exc, SMTPException):
+        return Response(fail("Email sending failed."), status=500)
     return Response(fail(str(exc)), status=500)
