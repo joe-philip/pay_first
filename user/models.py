@@ -103,7 +103,7 @@ class Transactions(MetaModel):
     amount = models.FloatField()
     description = models.TextField(blank=True)
     return_date = models.DateTimeField(null=True)
-    date = models.DateTimeField(auto_now=True)
+    date = models.DateTimeField(null=True, blank=True)
     payment_method = models.ForeignKey(
         PaymentMethods, on_delete=models.PROTECT
     )
@@ -136,7 +136,7 @@ class Repayments(MetaModel):
     )
     amount = models.FloatField()
     remarks = models.TextField(blank=True)
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(null=True, blank=True)
     payment_method = models.ForeignKey(
         PaymentMethods, on_delete=models.PROTECT
     )

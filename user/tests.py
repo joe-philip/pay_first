@@ -923,7 +923,7 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         )
         response_data = response.data
         assert response.status_code == 201
-        assert response_data.get("date")
+        assert not response_data.get("date")
 
     def test_debit_transaction_create_withoud_date(self):
         data = deepcopy(self.payload)
@@ -937,7 +937,7 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
         )
         response_data = response.data
         assert response.status_code == 201
-        assert response_data.get("date")
+        assert not response_data.get("date")
 
     def test_credit_transaction_create_without_description(self):
         data = deepcopy(self.payload)
