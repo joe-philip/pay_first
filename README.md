@@ -35,6 +35,13 @@
    version: "3.9"
 
    services:
+      redis:
+         image: redis:8.2.3
+         container_name: redis
+         ports:
+            - "6379:6379"
+         networks:
+            - pay-first-network
       db:
          image: postgres:16
          env_file:
@@ -86,6 +93,8 @@
 5. Create a `.env` file with the following format:
    ```
    SECRET_KEY = django-insecure-pvl*_ypzk)2bzhl77u2y$q801vus)+r6xik3+@f&frn3s-$^f
+   ALLOWED_HOSTS=*
+   DEBUG=1
 
    POSTGRES_DB=postgres
    POSTGRES_USER=postgres
@@ -100,6 +109,21 @@
 
    CORS_ALLOWED_ORIGINS=http://127.0.0.1:3000,http://localhost:3000
    CORS_ALLOW_ALL_ORIGINS=0
+
+   EMAIL_HOST
+   EMAIL_PORT
+   EMAIL_HOST_USER
+   EMAIL_HOST_PASSWORD
+   DEFAULT_FROM_EMAIL
+
+   RESET_PASSWORD_LINK_EXPIRY_SECONDS
+   RESET_PASSWORD_URL
+
+   EMAIL_VERIFICATION_URL
+
+   REDIS_HOST=redis
+   REDIS_PORT=6379
+   REDIS_CACHE_DB=1
    ```
   
       Tip: you can copy the provided example file and update values:
