@@ -59,8 +59,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "root.utils.middlewares.cache.CacheFetchMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -68,6 +68,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "root.utils.middlewares.cache.CacheStoreMiddleware"
 ]
 
 ROOT_URLCONF = "root.urls"
@@ -142,7 +143,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_URL = "static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATIC_ROOT = os.path.join(BASE_DIR, "assets")
@@ -276,3 +276,17 @@ EMAIL_VERIFICATION_URL = env(
     "EMAIL_VERIFICATION_URL",
     default="http://localhost:3000/verify-email/?uid={uid}&token={token}"
 )
+
+# Cache Configuration
+# https://docs.djangoproject.com/en/5.2/ref/settings/#std-setting-CACHES
+
+REDIS_HOST = env("REDIS_HOST", default="localhost")
+REDIS_PORT = env.int("REDIS_PORT", default=6379)
+REDIS_CACHE_DB = env.int("REDIS_CACHE_DB", default=1)
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CACHE_DB}",
+    }
+}

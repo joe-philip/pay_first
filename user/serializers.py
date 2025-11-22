@@ -130,7 +130,6 @@ class TransactionsSerializer(serializers.ModelSerializer):
         }
         read_only_fields = DEFAULT_READ_ONLY_FIELDS
 
-
 class RepaymentsSerializer(serializers.ModelSerializer):
     def validate_transaction(self, value: Transactions) -> Transactions:
         if value.contact.owner == self.context.get("request").user:

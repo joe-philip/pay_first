@@ -611,6 +611,7 @@ class ProfileAPITestCase(APITestCase, BasicTestsMixin):
             response.status_code == 401
         ), "Expected status code 401 for unauthorized access"
         assert "error" in response.data, "Expected 'error' field in error response"
+
 class MetaAPITestCase(APITestCase, BasicTestsMixin):
     """
     Meta API Test case
@@ -633,4 +634,5 @@ class MetaAPITestCase(APITestCase, BasicTestsMixin):
         """
         response = self.client.get(self.BASE_URL)
         assert response.status_code == 200, "Expected api status code be 200"
-        assert len(response.data) == 6, "Expected 6 active modules in response"
+        modules = response.data.get("modules")
+        assert len(modules) == 6, "Expected 6 active modules in response"

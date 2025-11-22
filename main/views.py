@@ -5,9 +5,12 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import (PasswordResetTokenGenerator,
                                         default_token_generator)
 from django.core.mail import send_mail
+from django.db.transaction import atomic
 from django.template.loader import render_to_string
+from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.views.decorators.cache import cache_page
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -40,31 +43,31 @@ class SignupAPIView(APIView):
     def post(self, request: Request) -> Response:
         serializer = SignupAPISerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        app_settings = AppSettings.objects.last()
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        link = settings.EMAIL_VERIFICATION_URL.format(uid=uid, token=token)
-        timeout = timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT)
-        app_title = "PayBuddy"
-        if app_settings:
-            app_title = app_settings.app_name
-
-        send_mail(
-            subject=f"{app_title}: Email Verification",
-            message="",
-            html_message=render_to_string(
-                "email/welcome.html",
-                context={
-                    "user": user,
-                    "link": link,
-                    "expiry": int(timeout.total_seconds() / 36e2),
-                    "app_title": app_title
-                }
-            ),
-            from_email=None,
-            recipient_list=[user.username]
-        )
+        with atomic():
+            user = serializer.save()
+            app_settings = AppSettings.objects.last()
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            link = settings.EMAIL_VERIFICATION_URL.format(uid=uid, token=token)
+            timeout = timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT)
+            app_title = "PayBuddy"
+            if app_settings:
+                app_title = app_settings.app_name
+            send_mail(
+                subject=f"{app_title}: Email Verification",
+                message="",
+                html_message=render_to_string(
+                    "email/welcome.html",
+                    context={
+                        "user": user,
+                        "link": link,
+                        "expiry": int(timeout.total_seconds() / 36e2),
+                        "app_title": app_title
+                    }
+                ),
+                from_email=None,
+                recipient_list=[user.username]
+            )
         return Response(serializer.data, status=201)
 
 
@@ -118,9 +121,16 @@ class UserProfileAPIView(RetrieveAPIView):
         return self.request.user
 
 
-class MetaAPIView(ListAPIView):
+@method_decorator(cache_page(timeout=None, key_prefix="meta_api"), name='dispatch')
+class MetaAPIView(RetrieveAPIView):
     serializer_class = MetaAPISerializer
-    queryset = ModuleInfo.objects.filter(is_active=True).order_by('created_at')
+
+    def get_object(self) -> dict:
+        data = {
+            "app_settings": AppSettings.objects.last(),
+            "modules": ModuleInfo.objects.all()
+        }
+        return data
 
 
 class ForgotPasswordAPIView(APIView):
