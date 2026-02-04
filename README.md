@@ -35,6 +35,16 @@
    version: "3.9"
 
    services:
+      rabbitmq:
+         image: rabbitmq:3-management
+         ports:
+            - "5672:5672"
+            - "15672:15672"
+         env_file:
+            - ./.env
+         networks:
+            - pay-first-network
+
       redis:
          image: redis:8.2.3
          container_name: redis
@@ -42,6 +52,7 @@
             - "6379:6379"
          networks:
             - pay-first-network
+
       db:
          image: postgres:16
          env_file:
@@ -67,6 +78,17 @@
             - db
          env_file:
             - ./.env
+         networks:
+            - pay-first-network
+
+      worker:
+         build: .
+         command: celery -A root worker -l info --concurrency=4
+         volumes:
+            - .:/app
+         depends_on:
+            - rabbitmq
+            - redis
          networks:
             - pay-first-network
 
