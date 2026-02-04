@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework',
     "rest_framework.authtoken",
     "corsheaders",
+    "django_celery_results",
     "main",
     "user"
 ]
@@ -290,3 +291,21 @@ CACHES = {
         "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CACHE_DB}",
     }
 }
+
+# RabbitMQ
+RABBITMQ_DEFAULT_USER = env("RABBITMQ_DEFAULT_USER", "rabbit")
+RABBITMQ_DEFAULT_PASS = env("RABBITMQ_DEFAULT_PASS", "123")
+
+# Celery
+CELERY_BROKER_URL = f"amqp://{RABBITMQ_DEFAULT_USER}:{RABBITMQ_DEFAULT_PASS}@rabbitmq:5672//"
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+
+CELERY_RESULT_BACKEND = "django-db"
+
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+
+CELERY_TASK_TIME_LIMIT = 60
+CELERY_TASK_SOFT_TIME_LIMIT = 50
