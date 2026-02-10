@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import (PasswordResetTokenGenerator,
                                         default_token_generator)
 from django.core.mail import send_mail
-from django.db.transaction import atomic
+from django.db.transaction import atomic, on_commit
 from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
@@ -23,6 +23,7 @@ from rest_framework.views import APIView
 
 from main.models import AppSettings, ModuleInfo
 from main.models import User as UserModel
+from main.tasks import send_verification_email_task
 from main.utils import is_auth_token_expired
 from root.utils.error_codes import EMAIL_NOT_VERIFIED
 from root.utils.utils import is_token_expired
@@ -45,28 +46,8 @@ class SignupAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         with atomic():
             user = serializer.save()
-            app_settings = AppSettings.objects.last()
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            link = settings.EMAIL_VERIFICATION_URL.format(uid=uid, token=token)
-            timeout = timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT)
-            app_title = "PayBuddy"
-            if app_settings:
-                app_title = app_settings.app_name
-            send_mail(
-                subject=f"{app_title}: Email Verification",
-                message="",
-                html_message=render_to_string(
-                    "email/welcome.html",
-                    context={
-                        "user": user,
-                        "link": link,
-                        "expiry": int(timeout.total_seconds() / 36e2),
-                        "app_title": app_title
-                    }
-                ),
-                from_email=None,
-                recipient_list=[user.username]
+            on_commit(
+                lambda: send_verification_email_task.delay(user.id)
             )
         return Response(serializer.data, status=201)
 
