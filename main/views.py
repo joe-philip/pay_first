@@ -23,7 +23,8 @@ from rest_framework.views import APIView
 
 from main.models import AppSettings, ModuleInfo
 from main.models import User as UserModel
-from main.tasks import send_verification_email_task
+from main.tasks import (send_forgot_password_otp_email,
+                        send_verification_email_task)
 from main.utils import is_auth_token_expired
 from root.utils.error_codes import EMAIL_NOT_VERIFIED
 from root.utils.utils import is_token_expired
@@ -121,24 +122,7 @@ class ForgotPasswordAPIView(APIView):
         user = User.objects.filter(
             username=serializer.validated_data['email'], is_active=True
         ).first()
-        token = PasswordResetTokenGenerator().make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        reset_link = settings.RESET_PASSWORD_URL.format(uid=uid, token=token)
-        timeout = timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT)
-        send_mail(
-            subject="Paybuddy: Password Reset",
-            message="",
-            html_message=render_to_string(
-                "email/reset_password.html",
-                context={
-                    "user": user,
-                    "link": reset_link,
-                    "expiry": int(timeout.total_seconds() / 60),
-                }
-            ),
-            from_email=None,
-            recipient_list=[user.username]
-        )
+        send_forgot_password_otp_email.delay(user.id)
         return Response(status=204)
 
 
