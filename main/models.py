@@ -1,6 +1,13 @@
+from datetime import datetime
+
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import DateTimeField, ExpressionWrapper, F
+from django.db.models.functions import Now
 
+from main.exceptions import OTPAlreadyExistsException
+from main.query import otp_expiry
 from root.utils.models import MetaModel
 
 # Create your models here.
@@ -42,3 +49,29 @@ class ModuleInfo(MetaModel):
         verbose_name = "Module info"
 
     def __str__(self) -> str: return self.name
+
+
+class OTP(models.Model):
+    otp = models.CharField(max_length=8)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    attempt = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "otp"
+        verbose_name = "OTP"
+
+    @property
+    def is_valid(self) -> bool:
+        return self.created_at + settings.OTP_EXPIRY > datetime.now()
+
+    def __str__(self) -> str:
+        return self.user.first_name
+
+    def save(self, *args, **kwargs):
+        existing_otp = OTP.objects.annotate(
+            expiry_time=otp_expiry
+        ).filter(otp=self.otp, expiry_time__gt=Now())
+        if existing_otp.exists():
+            raise OTPAlreadyExistsException()
+        return super().save(*args, **kwargs)
