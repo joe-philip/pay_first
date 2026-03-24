@@ -1,22 +1,20 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from logging import error
-from random import randint
 
 from celery import shared_task
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db.models.functions import Now
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-from pytz import timezone
 
 from main.choices import OTPTypeChoices
 from main.exceptions import OTPAlreadyExistsException
-from main.models import AppSettings
+from main.models import OTP, AppSettings
 
-from .models import OTP, User
+User = get_user_model()
 
 
 @shared_task(
@@ -63,18 +61,9 @@ def send_forgot_password_otp_email(self, user_id):
     if not user.exists():
         error("Unable to send forgot password email, user not found")
     user = user.first()
-    existing_otps = OTP.objects.filter(user=user, validity__gt=Now())
-    existing_otp_values = existing_otps.values_list("otp", flat=True)
-    new_otp_value = randint(100000, 999999)
-    # Keeps iterating until a new OTP value that is not currently existing in DB is got
-    while new_otp_value in existing_otp_values:
-        new_otp_value = randint(100000, 999999)
-    created_at = datetime.now(tz=timezone(settings.TIME_ZONE))
-    otp = OTP.objects.create(
-        user=user, otp=new_otp_value,
-        otp_type=OTPTypeChoices.FORGOT_PASSWORD.value,
-        created_at=created_at,
-        validity=created_at + settings.OTP_EXPIRY
+    otp = OTP.objects.create_otp_for_user(
+        user=user,
+        otp_type=OTPTypeChoices.FORGOT_PASSWORD.value
     )
     app_settings = AppSettings.objects.last()
     app_title = app_settings.app_name if app_settings else "PayBuddy"
