@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models import DateTimeField, ExpressionWrapper, F
 from django.db.models.functions import Now
 
+from main.choices import OTPTypeChoices
 from main.exceptions import OTPAlreadyExistsException
 from main.query import otp_expiry
 from root.utils.models import MetaModel
@@ -56,6 +57,8 @@ class OTP(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     attempt = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
+    otp_type = models.PositiveSmallIntegerField(choices=OTPTypeChoices.choices)
+    validity = models.DateTimeField()
 
     class Meta:
         db_table = "otp"
