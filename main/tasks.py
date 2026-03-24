@@ -26,10 +26,10 @@ User = get_user_model()
 )
 def send_verification_email_task(self, user_id: int):
     user = User.objects.get(id=user_id)
-    token = default_token_generator.make_token(user)
-    uid = urlsafe_base64_encode(force_bytes(user.pk))
-    link = settings.EMAIL_VERIFICATION_URL.format(uid=uid, token=token)
-    timeout = timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT)
+    otp = OTP.objects.create_otp_for_user(
+        user=user,
+        otp_type=OTPTypeChoices.EMAIL_VERIFICATION.value,
+    )
     app_settings = AppSettings.objects.last()
     app_title = app_settings.app_name if app_settings else "PayBuddy"
     send_mail(
@@ -39,8 +39,8 @@ def send_verification_email_task(self, user_id: int):
             "email/welcome.html",
             {
                 "user": user,
-                "link": link,
-                "expiry": int(timeout.total_seconds() / 3600),
+                "otp": otp.otp,
+                "expiry": int(settings.OTP_EXPIRY.total_seconds() / 60),
                 "app_title": app_title,
             },
         ),

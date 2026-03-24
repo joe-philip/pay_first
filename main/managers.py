@@ -2,7 +2,7 @@ from datetime import datetime
 from random import randint
 
 from django.conf import settings
-from django.db.models import Manager
+from django.db.models import Manager, QuerySet
 from django.db.models.functions import Now
 from pytz import timezone
 
@@ -23,3 +23,6 @@ class OTPManager(Manager):
             validity=created_at + settings.OTP_EXPIRY
         )
         return otp
+
+    def filter_valid_otps(self) -> QuerySet:
+        return self.filter(validity__gt=Now())
