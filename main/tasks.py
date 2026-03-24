@@ -15,7 +15,6 @@ from pytz import timezone
 from main.choices import OTPTypeChoices
 from main.exceptions import OTPAlreadyExistsException
 from main.models import AppSettings
-from main.query import otp_expiry
 
 from .models import OTP, User
 

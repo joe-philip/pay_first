@@ -1,12 +1,15 @@
+from datetime import datetime
+from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
+from pytz import timezone
 from rest_framework import serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.exceptions import AuthenticationFailed
 
-from main.models import AppSettings, ModuleInfo
+from main.choices import OTPTypeChoices
+from main.error_codes import EXPIRED_OTP, INVALID_OTP
+from main.models import OTP, AppSettings, ModuleInfo
 from main.models import User as UserModel
 
 from main.models import ModuleInfo
@@ -160,8 +163,11 @@ class ForgotPasswordSerializer(serializers.Serializer):
 
 
 class ResetPasswordSerializer(serializers.Serializer):
-    _id = serializers.CharField()
-    token = serializers.CharField()
+    email = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=User.objects.all()
+    )
+    otp = serializers.CharField()
     new_password = serializers.CharField(write_only=True, min_length=8)
 
     def validate_new_password(self, value: str) -> str:
@@ -171,18 +177,34 @@ class ResetPasswordSerializer(serializers.Serializer):
         raise serializers.ValidationError(validation_errors)
 
     def validate(self, attrs):
-        try:
-            uid = force_str(urlsafe_base64_decode(attrs["_id"]))
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            raise serializers.ValidationError("Invalid link.")
-
-        if not PasswordResetTokenGenerator().check_token(user, attrs["token"]):
-            raise serializers.ValidationError("Invalid or expired token.")
-
-        user.set_password(attrs["new_password"])
-        user.save()
+        otp = OTP.objects.filter(
+            user__username=attrs["email"].username,
+            otp=attrs["otp"]
+        )
+        if not otp.exists():
+            raise serializers.ValidationError(
+                {"otp": ["Invalid OTP"]},
+                code=INVALID_OTP
+            )
+        otp = otp.filter(
+            validity__gt=datetime.now(
+                tz=timezone(settings.TIME_ZONE)
+            )
+        )
+        if not otp.exists():
+            raise serializers.ValidationError(
+                {"otp": ["OTP has expired"]},
+                code=EXPIRED_OTP
+            )
         return attrs
+
+    def save(self, **kwargs):
+        user = self.validated_data["email"]
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+        OTP.objects.filter(
+            user=user, otp_type=OTPTypeChoices.FORGOT_PASSWORD.value
+        ).delete()
 
 
 class EmailVerificationSerializer(serializers.Serializer):

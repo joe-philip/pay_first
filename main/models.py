@@ -3,12 +3,10 @@ from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models import DateTimeField, ExpressionWrapper, F
 from django.db.models.functions import Now
 
 from main.choices import OTPTypeChoices
 from main.exceptions import OTPAlreadyExistsException
-from main.query import otp_expiry
 from root.utils.models import MetaModel
 
 # Create your models here.
@@ -72,9 +70,7 @@ class OTP(models.Model):
         return self.user.first_name
 
     def save(self, *args, **kwargs):
-        existing_otp = OTP.objects.annotate(
-            expiry_time=otp_expiry
-        ).filter(otp=self.otp, expiry_time__gt=Now())
+        existing_otp = OTP.objects.filter(otp=self.otp, validity__gt=Now())
         if existing_otp.exists():
             raise OTPAlreadyExistsException()
         return super().save(*args, **kwargs)

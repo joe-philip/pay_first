@@ -130,6 +130,7 @@ class PasswordResetConfirmView(APIView):
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(status=204)
 
 
