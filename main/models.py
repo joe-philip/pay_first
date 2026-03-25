@@ -59,7 +59,7 @@ class OTP(models.Model):
     otp_type = models.PositiveSmallIntegerField(choices=OTPTypeChoices.choices)
     validity = models.DateTimeField()
 
-    objects = OTPManager()
+    objects: OTPManager = OTPManager()
 
     class Meta:
         db_table = "otp"

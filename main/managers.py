@@ -16,13 +16,21 @@ class OTPManager(Manager):
         while new_otp_value in existing_otp_values:
             new_otp_value = randint(100000, 999999)
         created_at = datetime.now(tz=timezone(settings.TIME_ZONE))
+        attempt = self.get_last_attempt_number(user, otp_type) + 1
         otp = self.create(
             user=user, otp=new_otp_value,
             otp_type=otp_type,
             created_at=created_at,
+            attempt=attempt,
             validity=created_at + settings.OTP_EXPIRY
         )
         return otp
 
-    def filter_valid_otps(self) -> QuerySet:
-        return self.filter(validity__gt=Now())
+    def filter_valid_otps(self, **kwargs) -> QuerySet:
+        return self.filter(validity__gt=Now()).filter(**kwargs)
+
+    def get_last_attempt_number(self, user, otp_type: int) -> int:
+        attempt = self.filter_valid_otps(user=user, otp_type=otp_type).order_by("attempt").values_list("attempt", flat=True).last()
+        if attempt:
+            return attempt
+        return 0

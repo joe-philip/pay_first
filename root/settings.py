@@ -315,3 +315,5 @@ CELERY_TASK_SOFT_TIME_LIMIT = 50
 OTP_EXPIRY = timedelta(
     **{key: int(value) for key, value in env.dict("OTP_EXPIRY").items()}
 )
+OTP_MAX_ATTEMPTS = env.int("OTP_MAX_ATTEMPTS", default=5)
+

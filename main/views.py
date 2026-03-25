@@ -21,7 +21,9 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 
-from main.models import AppSettings, ModuleInfo
+from main.choices import OTPTypeChoices
+from main.error_codes import MAXIMUM_NUMBER_OF_ATTEMPTS_EXCEEDED
+from main.models import OTP, AppSettings, ModuleInfo
 from main.models import User as UserModel
 from main.tasks import (send_forgot_password_otp_email,
                         send_verification_email_task)
@@ -122,6 +124,17 @@ class ForgotPasswordAPIView(APIView):
         user = User.objects.filter(
             username=serializer.validated_data['email'], is_active=True
         ).first()
+        attempt = OTP.objects.get_last_attempt_number(
+            user=user,
+            otp_type=OTPTypeChoices.FORGOT_PASSWORD.value
+        )
+        if attempt >= settings.OTP_MAX_ATTEMPTS:
+            raise ValidationError(
+                {
+                    "email": ["Too many attempts, please try again after some time."]
+                },
+                code=MAXIMUM_NUMBER_OF_ATTEMPTS_EXCEEDED
+            )
         send_forgot_password_otp_email.delay(user.id)
         return Response(status=204)
 
