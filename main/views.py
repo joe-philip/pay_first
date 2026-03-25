@@ -1,20 +1,14 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import (PasswordResetTokenGenerator,
-                                        default_token_generator)
-from django.core.mail import send_mail
 from django.db.transaction import atomic, on_commit
-from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.decorators.cache import cache_page
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -25,11 +19,11 @@ from main.choices import OTPTypeChoices
 from main.error_codes import MAXIMUM_NUMBER_OF_ATTEMPTS_EXCEEDED
 from main.models import OTP, AppSettings, ModuleInfo
 from main.models import User as UserModel
-from main.tasks import (send_forgot_password_otp_email,
+from main.tasks import (resend_verification_otp_email,
+                        send_forgot_password_otp_email,
                         send_verification_email_task)
 from main.utils import is_auth_token_expired
 from root.utils.error_codes import EMAIL_NOT_VERIFIED
-from root.utils.utils import is_token_expired
 
 from .serializers import (ChangePasswordSerializer,
                           EmailVerificationSerializer,
@@ -149,14 +143,7 @@ class PasswordResetConfirmView(APIView):
 
 class EmailVerificationAPI(APIView):
     def post(self, request: Request) -> Response:
-        uid = force_str(urlsafe_base64_decode(request.data.get("_id")))
-        user = User.objects.filter(pk=uid)
-        if not user.exists():
-            raise ValidationError("Invalid link.")
-        user = user.first()
-        serializer = EmailVerificationSerializer(
-            data=request.data, context={"user": user}
-        )
+        serializer = EmailVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=204)
@@ -166,34 +153,18 @@ class ResendVerificationEmailView(APIView):
     def post(self, request):
         serializer = ResendVerificationEmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = User.objects.get(username=serializer.validated_data['email'])
-        token = default_token_generator.make_token(user)
-        expired = is_token_expired(token)  # 24 hours
-        if expired:
-            token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        verification_link = settings.EMAIL_VERIFICATION_URL.format(
-            uid=uid, token=token)
-        subject = "Verify your email address"
-        message = f"Hi {user.username},\nClick below to verify your email:\n{verification_link}"
-        expiry = settings.PASSWORD_RESET_TIMEOUT // 3600
-        app_title = "PayBuddy"
-        app_settings = AppSettings.objects.last()
-        if app_settings:
-            app_title = app_settings.app_name
-        send_mail(
-            subject,
-            message,
-            None,
-            [user.username],
-            html_message=render_to_string(
-                "email/email_verify.html",
-                context={
-                    "user": user,
-                    "link": verification_link,
-                    "expiry": expiry,
-                    "app_title": app_title
-                }
+        user = serializer.validated_data["email"]
+        attempt = OTP.objects.get_last_attempt_number(
+            user=user, otp_type=OTPTypeChoices.EMAIL_VERIFICATION.value
+        )
+        if attempt >= settings.OTP_MAX_ATTEMPTS:
+            raise ValidationError(
+                {
+                    "email": ["Too many attempts, please try again after some time."]
+                },
+                code=MAXIMUM_NUMBER_OF_ATTEMPTS_EXCEEDED
             )
+        resend_verification_otp_email.delay(
+            user.id
         )
         return Response(status=204)

@@ -82,3 +82,39 @@ def send_forgot_password_otp_email(self, user_id):
         from_email=None,
         recipient_list=[user.username],
     )
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(OTPAlreadyExistsException,),
+    retry_kwargs={"max_retries": 5, "countdown": 30},
+    retry_backoff=True,
+    retry_jitter=True,
+)
+def resend_verification_otp_email(self, user_id):
+    user = User.objects.filter(id=user_id)
+    if not user.exists():
+        error(
+            f"Unable to resend verification OTP email, no user found with ID {user_id}")
+    user = user.first()
+    otp = OTP.objects.create_otp_for_user(
+        user=user,
+        otp_type=OTPTypeChoices.EMAIL_VERIFICATION.value
+    )
+    app_settings = AppSettings.objects.last()
+    app_title = app_settings.app_name if app_settings else "PayBuddy"
+    send_mail(
+        subject=f"{app_title}: Email Verification",
+        message="",
+        html_message=render_to_string(
+            "email/email_verify.html",
+            {
+                "user": user,
+                "otp": otp.otp,
+                "expiry": int(settings.OTP_EXPIRY.total_seconds() / 60),
+                "app_title": app_title,
+            },
+        ),
+        from_email=None,
+        recipient_list=[user.username],
+    )

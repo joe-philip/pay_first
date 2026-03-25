@@ -1,18 +1,16 @@
 from datetime import datetime
+
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from pytz import timezone
 from rest_framework import serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.exceptions import AuthenticationFailed
 
 from main.choices import OTPTypeChoices
-from main.error_codes import EXPIRED_OTP, INVALID_OTP
+from main.error_codes import EMAIL_ALREADY_VERIFIED, EXPIRED_OTP, INVALID_OTP
 from main.models import OTP, AppSettings, ModuleInfo
 from main.models import User as UserModel
-
-from main.models import ModuleInfo
 
 from .validators import is_email_format, user_exists, validate_password
 
@@ -208,35 +206,55 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 
 class EmailVerificationSerializer(serializers.Serializer):
-    _id = serializers.CharField()
-    token = serializers.CharField()
+    email = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=User.objects.all()
+    )
+    otp = serializers.CharField()
 
     def validate(self, attrs):
-        user = self.context['user']
+        user = attrs["email"]
+        otp = OTP.objects.filter(
+            user__username=user.username,
+            otp_type=OTPTypeChoices.EMAIL_VERIFICATION.value,
+            otp=attrs["otp"]
+        )
+        if not otp.exists():
+            raise serializers.ValidationError(
+                {"otp": ["Invalid OTP"]},
+                code=INVALID_OTP
+            )
+        valid_otps = otp.filter_valid_otps()
+        if not valid_otps.exists():
+            raise serializers.ValidationError(
+                {"otp": ["OTP has expired"]},
+                code=EXPIRED_OTP
+            )
         if user.email_verified:
-            raise serializers.ValidationError("Email is already verified.")
-        if not PasswordResetTokenGenerator().check_token(user, attrs["token"]):
-            raise serializers.ValidationError("Invalid or expired token.")
-        return attrs
+            raise serializers.ValidationError(
+                {"email": ["Email already verified"]},
+                code=EMAIL_ALREADY_VERIFIED
+            )
+        return super().validate(attrs)
 
     def save(self, **kwargs) -> UserModel:
-        user = self.context['user']
+        user = self.validated_data["email"]
         user.email_verified = True
         user.save()
+        OTP.objects.filter(
+            user=user, otp_type=OTPTypeChoices.EMAIL_VERIFICATION.value
+        ).delete()
         return user
 
 
 class ResendVerificationEmailSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    email = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=User.objects.all()
+    )
 
-    def validate_email(self, value: str) -> str:
-        value = value.lower()
-        if not is_email_format(value):
-            raise serializers.ValidationError('Invalid email format')
-        try:
-            user = User.objects.get(username=value)
-        except User.DoesNotExist:
-            raise serializers.ValidationError('No user found with that email.')
-        if user.email_verified:
-            raise serializers.ValidationError('User already verified.')
+    def validate_email(self, value):
+        if value.email_verified:
+            raise serializers.ValidationError(
+                'Email already verified', code=EMAIL_ALREADY_VERIFIED)
         return value
