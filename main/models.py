@@ -67,7 +67,11 @@ class OTP(models.Model):
 
     @property
     def is_valid(self) -> bool:
-        return self.created_at + settings.OTP_EXPIRY > datetime.now()
+        return self.objects.filter_valid_otps(
+            otp=self.otp,
+            user=self.user,
+            otp_type=self.otp_type
+        ).exists()
 
     def __str__(self) -> str:
         return self.user.first_name
