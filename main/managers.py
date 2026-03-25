@@ -7,7 +7,7 @@ from django.db.models.functions import Now
 from pytz import timezone
 
 
-class OTPManager(Manager):
+class OTPQuerySet(QuerySet):
     def create_otp_for_user(self, user, otp_type: int):
         existing_otps = self.filter(user=user, validity__gt=Now())
         existing_otp_values = existing_otps.values_list("otp", flat=True)
@@ -30,7 +30,9 @@ class OTPManager(Manager):
         return self.filter(validity__gt=Now()).filter(**kwargs)
 
     def get_last_attempt_number(self, user, otp_type: int) -> int:
-        attempt = self.filter_valid_otps(user=user, otp_type=otp_type).order_by("attempt").values_list("attempt", flat=True).last()
+        attempt = self.filter_valid_otps(
+            user=user, otp_type=otp_type
+        ).order_by("attempt").values_list("attempt", flat=True).last()
         if attempt:
             return attempt
         return 0

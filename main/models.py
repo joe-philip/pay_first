@@ -7,7 +7,7 @@ from django.db.models.functions import Now
 
 from main.choices import OTPTypeChoices
 from main.exceptions import OTPAlreadyExistsException
-from main.managers import OTPManager
+from main.managers import OTPQuerySet
 from root.utils.models import MetaModel
 
 # Create your models here.
@@ -59,7 +59,7 @@ class OTP(models.Model):
     otp_type = models.PositiveSmallIntegerField(choices=OTPTypeChoices.choices)
     validity = models.DateTimeField()
 
-    objects: OTPManager = OTPManager()
+    objects: OTPQuerySet = OTPQuerySet.as_manager()
 
     class Meta:
         db_table = "otp"
