@@ -1,13 +1,10 @@
-from datetime import datetime
-
-from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Now
 
 from main.choices import OTPTypeChoices
 from main.exceptions import OTPAlreadyExistsException
-from main.managers import OTPQuerySet
+from main.managers import OTPManager
 from root.utils.models import MetaModel
 
 # Create your models here.
@@ -59,7 +56,7 @@ class OTP(models.Model):
     otp_type = models.PositiveSmallIntegerField(choices=OTPTypeChoices.choices)
     validity = models.DateTimeField()
 
-    objects: OTPQuerySet = OTPQuerySet.as_manager()
+    objects: OTPManager = OTPManager()
 
     class Meta:
         db_table = "otp"
