@@ -114,6 +114,7 @@ class Transactions(MetaModel):
         PaymentSources, on_delete=models.SET_NULL,
         null=True, blank=True
     )
+    is_active = models.BooleanField(default=True)
 
     @property
     def pending_amount(self) -> float:
