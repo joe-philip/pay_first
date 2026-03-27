@@ -47,9 +47,11 @@ services:
 
   worker:
     build: .
-    command: celery -A root worker -l info --concurrency=4
+    command: python -m debugpy --listen 0.0.0.0:5680 --wait-for-client -m celery -A root worker -l info --pool=solo
     volumes:
       - .:/app
+    ports:
+      - "5680:5680"
     depends_on:
       - rabbitmq
       - redis

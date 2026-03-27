@@ -1,9 +1,9 @@
 from csv import DictReader
-from datetime import datetime
 from io import TextIOWrapper
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.utils.timezone import now
 
 from user.models import ContactGroup, Contacts
 
@@ -25,7 +25,7 @@ def create_contacts_from_csv_file(file: InMemoryUploadedFile, user: User):
             errors[counter] = ["Name not found"]
             continue
         name = f"{first_name} {middle_name} {last_name}"
-        data["pay_first_remarks"] = f"Imported on {datetime.now()}"
+        data["pay_first_remarks"] = f"Imported on {now()}"
         data["row"] = counter
         contact_object = Contacts(
             name=name, owner=user, data=data

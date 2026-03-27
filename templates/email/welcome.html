@@ -1,202 +1,167 @@
-<!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Confirm your email</title>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Verify your Pay Buddy email</title>
   <style>
-    /* Reset / base */
-    html,
     body {
       margin: 0;
       padding: 0;
-      background-color: #f5f7fb;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      color: #111827;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+      background-color: #f4f6f8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    table {
+      border-collapse: collapse;
     }
 
     a {
-      color: inherit;
       text-decoration: none;
     }
 
-    /* Container */
-    .email-wrap {
+    .email-wrapper {
+      background-color: #f4f6f8;
       width: 100%;
-      padding: 32px 16px;
-      box-sizing: border-box;
-      display: flex;
-      justify-content: center;
     }
 
-    .email-card {
-      width: 100%;
-      max-width: 600px;
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 6px 24px rgba(16, 24, 40, 0.08);
+    .container {
+      width: 600px;
+      max-width: 100%;
+      background-color: #ffffff;
+      border-radius: 8px;
       overflow: hidden;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
     }
 
     .header {
-      padding: 24px 28px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid #eef2f7;
+      padding: 24px 24px 0 24px;
+      text-align: left;
     }
 
-    .brand {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #2563eb, #06b6d4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 18px;
+    .hero {
+      padding: 24px;
     }
 
-    .brand-name {
-      font-size: 18px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-
-    .content {
-      padding: 28px;
-      line-height: 1.5;
-      font-size: 16px;
-      color: #111827;
-    }
-
-    .greeting {
+    .hero h1 {
       margin: 0 0 12px 0;
-      font-size: 18px;
+      font-size: 24px;
+      line-height: 1.2;
+      color: #0f1724;
       font-weight: 600;
-      color: #0f172a;
     }
 
-    .lead {
-      margin: 0 0 18px 0;
-      color: #374151;
+    .hero p {
+      margin: 0 0 20px 0;
+      color: #475569;
       font-size: 15px;
+      line-height: 1.5;
     }
 
-    .cta {
-      display: block;
-      margin: 18px 0;
+    .otp-box {
+      margin: 20px 0;
+      padding: 18px;
       text-align: center;
+      background: #f1f5f9;
+      border-radius: 8px;
+      border: 1px dashed #cbd5e1;
     }
 
-    .button {
-      display: inline-block;
-      background: linear-gradient(90deg, #2563eb, #06b6d4);
-      color: #ffffff !important;
-      padding: 12px 20px;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 16px;
-      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
-    }
-
-    .small {
-      font-size: 13px;
-      color: #6b7280;
+    .otp-code {
+      font-size: 28px;
+      letter-spacing: 6px;
+      font-weight: 700;
+      color: #2563eb;
     }
 
     .footer {
-      padding: 20px 28px;
-      border-top: 1px solid #eef2f7;
-      background: #fbfdff;
-      font-size: 13px;
-      color: #6b7280;
-    }
-
-    .muted {
-      color: #9ca3af;
+      background-color: #f8fafc;
+      padding: 16px 24px;
+      color: #94a3b8;
       font-size: 12px;
     }
 
-    /* Mobile */
-    @media (max-width:420px) {
-      .content {
-        padding: 20px;
+    .footer strong {
+      color: #0f1724;
+      font-weight: 600;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #e6e9ef;
+      margin: 20px 0;
+    }
+
+    @media only screen and (max-width: 600px) {
+      .container {
+        width: 100% !important;
+        padding: 16px !important;
       }
 
-      .header {
-        padding: 18px 20px;
-      }
-
-      .footer {
-        padding: 16px 20px;
-      }
-
-      .brand-name {
-        font-size: 16px;
+      .hero h1 {
+        font-size: 20px !important;
       }
     }
   </style>
+
 </head>
 
-<body class="activity-stream">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" class="email-wrap"
-    style="border-collapse:collapse;">
+<body>
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" class="email-wrapper">
     <tbody>
       <tr>
-        <td align="center">
-          <table role="presentation" class="email-card" width="100%" cellspacing="0" cellpadding="0"
-            style="border-collapse:collapse;">
+        <td align="center" style="padding:24px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" class="container">
             <tbody>
+
+              <!-- Header -->
               <tr>
                 <td class="header">
-                  <div class="brand" aria-hidden="true">PB</div>
-                  <div>
-                    <div class="brand-name">{{app_title}}</div>
-                    <div class="muted" style="font-size:12px;">Verify your email to finish signing up</div>
-                  </div>
+                  <img src="https://via.placeholder.com/140x36?text=Pay+Buddy" alt="Pay Buddy" width="140" height="36">
                 </td>
               </tr>
 
+              <!-- Content -->
               <tr>
-                <td class="content">
-                  <h1 class="greeting">Hi {{user.first_name}} {{user.last_name}},</h1>
+                <td class="hero">
+                  <h1>Verify your email</h1>
 
-                  <p class="lead">
-                    Thanks for creating an account with <strong>{{app_title}}</strong>. Before you get started, please
-                    confirm your email address so we know it’s really you.
+                  <p>
+                    Hi <strong>{{user.first_name}}</strong>,<br>
+                    Welcome to Pay Buddy! Please verify your email address to complete your
+                    registration.
+                    Use the One-Time Password (OTP) below to continue.
                   </p>
 
-                  <div class="cta">
-                    <!-- Use the full URL here; many email clients prefer absolute links -->
-                    <a href="{{link}}" class="button" target="_blank" rel="noopener">Verify my email</a>
+                  <!-- OTP BOX -->
+                  <div class="otp-box">
+                    <div class="otp-code">{{otp}}</div>
                   </div>
 
-                  <p class="small">
-                    If the button above doesn't work, copy and paste the following link into your browser:
-                    <br>
-                    <a href="{{link}}" target="_blank" rel="noopener"
-                      style="word-break:break-all;color:#2563eb;">{{link}}</a>
+                  <p>
+                    Enter this OTP in the verification screen of the Pay Buddy app to activate your
+                    account.
                   </p>
 
-                  <hr style="border:none;border-top:1px solid #eef2f7;margin:20px 0;">
-
-                  <p class="small">
-                    This link will expire in <strong>{{expiry}} hours</strong>. If you didn't create an account with us,
-                    you can safely ignore this email.
+                  <p>
+                    This OTP will expire in
+                    <strong>{{expiry}} minute{% if expiry > 1 %}s{% endif %}</strong>.
                   </p>
 
+                  <hr>
 
+                  <p style="font-size:14px;color:#64748b;">
+                    If you did not create an account with Pay Buddy, you can safely ignore this
+                    email.
+                  </p>
                 </td>
               </tr>
 
-
+              <!-- Footer -->
+              <tr>
+                <td class="footer">
+                  <strong>{{app_title}}</strong>
+                </td>
+              </tr>
 
             </tbody>
           </table>
@@ -204,8 +169,6 @@
       </tr>
     </tbody>
   </table>
-
-
 </body>
 
 </html>

@@ -1,9 +1,9 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
 from django.core.cache import cache
-from django.utils import timezone
 from django.utils.http import base36_to_int
+from django.utils.timezone import now
 
 
 def is_token_expired(token, timeout_seconds=settings.PASSWORD_RESET_TIMEOUT) -> bool:
@@ -14,8 +14,8 @@ def is_token_expired(token, timeout_seconds=settings.PASSWORD_RESET_TIMEOUT) -> 
     except Exception:
         return True  # malformed token
 
-    ts_datetime = datetime(2001, 1, 1) + timedelta(days=ts)
-    return timezone.now() - ts_datetime > timedelta(seconds=timeout_seconds)
+    ts_datetime = datetime(2001, 1, 1, tzinfo=timezone.utc) + timedelta(days=ts)
+    return now() - ts_datetime > timedelta(seconds=timeout_seconds)
 
 
 def get_all_cache_keys(pattern: str = "*") -> list[str]:

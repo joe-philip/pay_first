@@ -1,6 +1,11 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models.functions import Now
+from django.utils.timezone import now
 
+from main.choices import OTPTypeChoices
+from main.exceptions import OTPAlreadyExistsException
+from main.managers import OTPManager
 from root.utils.models import MetaModel
 
 # Create your models here.
@@ -42,3 +47,31 @@ class ModuleInfo(MetaModel):
         verbose_name = "Module info"
 
     def __str__(self) -> str: return self.name
+
+
+class OTP(models.Model):
+    otp = models.CharField(max_length=8)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    attempt = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    otp_type = models.PositiveSmallIntegerField(choices=OTPTypeChoices.choices)
+    validity = models.DateTimeField()
+
+    objects: OTPManager = OTPManager()
+
+    class Meta:
+        db_table = "otp"
+        verbose_name = "OTP"
+
+    @property
+    def is_valid(self) -> bool:
+        return self.validity > now()
+
+    def __str__(self) -> str:
+        return self.user.first_name
+
+    def save(self, *args, **kwargs):
+        existing_otp = OTP.objects.filter_valid_otps(otp=self.otp)
+        if existing_otp.exists():
+            raise OTPAlreadyExistsException()
+        return super().save(*args, **kwargs)
