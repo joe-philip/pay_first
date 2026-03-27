@@ -13,8 +13,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
-from environ import Env
 
+from celery.schedules import crontab
+from environ import Env
 
 env = Env(
     # set casting, default value
@@ -308,10 +309,15 @@ CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_TASK_TIME_LIMIT = 60
 CELERY_TASK_SOFT_TIME_LIMIT = 50
 CELERY_ENABLE_UTC = True
-CELERY_TIMEZONE = TIME_ZONE
+CELERY_TIMEZONE = "Asia/Kolkata"
+CELERY_BEAT_SCHEDULE = {
+    "mark-transactions-inactive-every-10-minutes": {
+        "task": "user.tasks.mark_transactions_inactive",
+        "schedule": crontab(minute="30", hour="12"),  # Runs Every day at 5:30 AM UTC
+    },
+}
 
 OTP_EXPIRY = timedelta(
     **{key: int(value) for key, value in env.dict("OTP_EXPIRY").items()}
 )
 OTP_MAX_ATTEMPTS = env.int("OTP_MAX_ATTEMPTS", default=5)
-
