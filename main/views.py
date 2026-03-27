@@ -1,9 +1,8 @@
-from datetime import datetime
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.transaction import atomic, on_commit
 from django.utils.decorators import method_decorator
+from django.utils.timezone import now
 from django.views.decorators.cache import cache_page
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -66,7 +65,7 @@ class LoginAPIView(ObtainAuthToken):
             if is_auth_token_expired(token):
                 token.delete()
                 token = Token.objects.create(user=user)
-        user.last_login = datetime.now()
+        user.last_login = now()
         return Response({'token': token.key})
 
 

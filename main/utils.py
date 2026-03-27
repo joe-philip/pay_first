@@ -1,9 +1,8 @@
 import re
-from datetime import datetime
 
 from django.conf import settings
 from django.core.cache import caches
-from pytz import timezone
+from django.utils import timezone
 from rest_framework.authtoken.models import Token
 
 from root.utils.utils import get_all_cache_keys
@@ -11,7 +10,7 @@ from root.utils.utils import get_all_cache_keys
 
 def is_auth_token_expired(token: Token) -> bool:
     token_expiry_date = token.created + settings.AUTH_TOKEN_EXPIRY
-    now = datetime.now(tz=timezone(settings.TIME_ZONE))
+    now = timezone.now()
     return now > token_expiry_date
 
 

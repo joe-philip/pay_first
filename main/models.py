@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Now
+from django.utils.timezone import now
 
 from main.choices import OTPTypeChoices
 from main.exceptions import OTPAlreadyExistsException
@@ -64,17 +65,13 @@ class OTP(models.Model):
 
     @property
     def is_valid(self) -> bool:
-        return self.objects.filter_valid_otps(
-            otp=self.otp,
-            user=self.user,
-            otp_type=self.otp_type
-        ).exists()
+        return self.validity > now()
 
     def __str__(self) -> str:
         return self.user.first_name
 
     def save(self, *args, **kwargs):
-        existing_otp = OTP.objects.filter(otp=self.otp, validity__gt=Now())
+        existing_otp = OTP.objects.filter_valid_otps(otp=self.otp)
         if existing_otp.exists():
             raise OTPAlreadyExistsException()
         return super().save(*args, **kwargs)

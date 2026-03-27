@@ -1,8 +1,5 @@
-from datetime import datetime
-
-from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
-from pytz import timezone
+from django.db.models.functions import Now
 from rest_framework import serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.exceptions import AuthenticationFailed
@@ -185,9 +182,7 @@ class ResetPasswordSerializer(serializers.Serializer):
                 code=INVALID_OTP
             )
         otp = otp.filter(
-            validity__gt=datetime.now(
-                tz=timezone(settings.TIME_ZONE)
-            )
+            validity__gt=Now()
         )
         if not otp.exists():
             raise serializers.ValidationError(

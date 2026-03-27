@@ -1,10 +1,10 @@
-from datetime import datetime
 from random import randint
 
 from django.conf import settings
 from django.db.models import Manager, QuerySet
 from django.db.models.functions import Now
-from pytz import timezone
+from django.utils import timezone
+
 from main.querysets import OTPQuerySet
 
 
@@ -19,7 +19,7 @@ class OTPManager(Manager):
         # Keeps iterating until a new OTP value that is not currently existing in DB is got
         while new_otp_value in existing_otp_values:
             new_otp_value = randint(100000, 999999)
-        created_at = datetime.now(tz=timezone(settings.TIME_ZONE))
+        created_at = timezone.now()
         attempt = self.get_last_attempt_number(user, otp_type) + 1
         otp = self.create(
             user=user, otp=new_otp_value,
