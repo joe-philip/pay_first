@@ -11,3 +11,5 @@ docker-compose.yaml
 Dockerfile
 assets
 logs
+celerybeat-schedule
+media

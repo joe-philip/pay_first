@@ -13,8 +13,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
-from environ import Env
 
+from celery.schedules import crontab
+from environ import Env
 
 env = Env(
     # set casting, default value
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     'rest_framework',
     "rest_framework.authtoken",
     "corsheaders",
+    "django_celery_results",
     "main",
     "user"
 ]
@@ -290,3 +292,32 @@ CACHES = {
         "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CACHE_DB}",
     }
 }
+
+# RabbitMQ
+RABBITMQ_DEFAULT_USER = env("RABBITMQ_DEFAULT_USER", default="rabbit")
+RABBITMQ_DEFAULT_PASS = env("RABBITMQ_DEFAULT_PASS", default="123")
+RABBITMQ_HOST = env("RABBITMQ_HOST", default="rabbitmq")
+RABBITMQ_PORT = env.int("RABBITMQ_PORT", default=5672)
+
+# Celery
+CELERY_BROKER_URL = f"amqp://{RABBITMQ_DEFAULT_USER}:{RABBITMQ_DEFAULT_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}//"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_TASK_TIME_LIMIT = 60
+CELERY_TASK_SOFT_TIME_LIMIT = 50
+CELERY_ENABLE_UTC = True
+CELERY_TIMEZONE = "Asia/Kolkata"
+CELERY_BEAT_SCHEDULE = {
+    "mark-transactions-inactive-every-10-minutes": {
+        "task": "user.tasks.mark_transactions_inactive",
+        "schedule": crontab(minute="30", hour="12"),  # Runs Every day at 5:30 AM UTC
+    },
+}
+
+OTP_EXPIRY = timedelta(
+    **{key: int(value) for key, value in env.dict("OTP_EXPIRY").items()}
+)
+OTP_MAX_ATTEMPTS = env.int("OTP_MAX_ATTEMPTS", default=5)

@@ -1,143 +1,163 @@
-<!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Verify your email – Pay Buddy</title>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Resend Email Verification - Pay Buddy</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background: #f6f8fb;
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      color: #111827;
+      background-color: #f4f6f8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    .email-wrapper {
+      background-color: #f4f6f8;
+      width: 100%;
     }
 
     .container {
-      max-width: 640px;
-      margin: 0 auto;
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+      width: 600px;
+      max-width: 100%;
+      background-color: #ffffff;
+      border-radius: 8px;
       overflow: hidden;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
     }
 
     .header {
-      background: linear-gradient(135deg, #2563eb, #06b6d4);
-      color: #ffffff;
-      text-align: center;
-      padding: 40px 20px 30px;
+      padding: 24px 24px 0 24px;
+      text-align: left;
     }
 
-    .header-logo {
-      background: rgba(255, 255, 255, 0.15);
-      display: inline-block;
-      padding: 12px 20px;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 20px;
-      letter-spacing: 0.5px;
+    .hero {
+      padding: 24px;
     }
 
-    .content {
-      padding: 36px 30px 40px;
-      line-height: 1.6;
-    }
-
-    .title {
+    .hero h1 {
+      margin: 0 0 12px 0;
       font-size: 24px;
-      font-weight: 700;
-      color: #111827;
-      margin: 0 0 10px;
-    }
-
-    .greeting {
-      font-size: 16px;
-      font-weight: 500;
-      color: #1f2937;
-      margin: 16px 0;
-    }
-
-    .message {
-      color: #374151;
-      font-size: 15px;
-      margin-bottom: 28px;
-    }
-
-    .button {
-      display: inline-block;
-      background: linear-gradient(90deg, #2563eb, #06b6d4);
-      color: #ffffff !important;
-      text-decoration: none;
+      line-height: 1.2;
+      color: #0f1724;
       font-weight: 600;
-      font-size: 16px;
-      padding: 12px 28px;
-      border-radius: 10px;
-      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.15);
+    }
+
+    .hero p {
+      margin: 0 0 20px 0;
+      color: #475569;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .otp-box {
+      margin: 20px 0;
+      padding: 18px;
+      text-align: center;
+      background: #f1f5f9;
+      border-radius: 8px;
+      border: 1px dashed #cbd5e1;
+    }
+
+    .otp-code {
+      font-size: 28px;
+      letter-spacing: 6px;
+      font-weight: 700;
+      color: #2563eb;
     }
 
     .footer {
-      background: #f9fafb;
-      text-align: center;
-      padding: 24px 20px;
-      font-size: 13px;
-      color: #6b7280;
+      background-color: #f8fafc;
+      padding: 16px 24px;
+      color: #94a3b8;
+      font-size: 12px;
     }
 
-    .footer a {
-      color: #2563eb;
-      text-decoration: none;
+    .footer strong {
+      color: #0f1724;
+      font-weight: 600;
     }
 
-    .small {
-      font-size: 13px;
-      color: #6b7280;
-      margin-top: 24px;
+    hr {
+      border: none;
+      border-top: 1px solid #e6e9ef;
+      margin: 20px 0;
     }
 
-    @media (max-width: 480px) {
-      .content {
-        padding: 28px 20px 36px;
+    @media only screen and (max-width: 600px) {
+      .container {
+        width: 100% !important;
+        padding: 16px !important;
       }
 
-      .title {
-        font-size: 20px;
+      .hero h1 {
+        font-size: 20px !important;
       }
     }
   </style>
+
 </head>
 
 <body>
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f8fb;padding:32px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" class="email-wrapper">
     <tbody>
       <tr>
-        <td align="center">
-          <table class="container" role="presentation" cellspacing="0" cellpadding="0" width="100%">
+        <td align="center" style="padding:24px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" class="container">
             <tbody>
+
+              <!-- Header -->
               <tr>
                 <td class="header">
-                  <div class="header-logo">{{app_title}}</div>
-                  <h2 style="margin-top:18px;font-weight:600;">Verify your email</h2>
+                  <img src="https://via.placeholder.com/140x36?text=Pay+Buddy" alt="Pay Buddy" width="140" height="36">
                 </td>
               </tr>
+
+              <!-- Content -->
               <tr>
-                <td class="content">
-                  <p class="greeting">Hi {{user.first_name}} {{user.last_name}},</p>
-                  <p class="message">To activate your account and start using Pay Buddy, please verify your email
-                    address by clicking the button below.</p>
-                  <p style="text-align:center;">
-                    <a class="button" target="_blank" rel="noopener" href="{{link}}">Verify Email</a>
+                <td class="hero">
+                  <h1>Verify your email</h1>
+
+                  <p>
+                    Hi <strong>{{user.first_name}}</strong>,<br>
+                    You requested a new verification code for your Pay Buddy account.
+                    Please use the One-Time Password (OTP) below to verify your email address.
                   </p>
-                  <p class="small">
-                    If the button doesn’t work, copy and paste this link into your browser:
-                    <br><a target="_blank" rel="noopener" style="word-break:break-all;" href="{{link}}">{{link}}</a>
+
+                  <!-- OTP BOX -->
+                  <div class="otp-box">
+                    <div class="otp-code">{{otp}}</div>
+                  </div>
+
+                  <p>
+                    Enter this OTP in the Pay Buddy app to complete your email verification.
                   </p>
-                  <p class="small">
-                    This verification link will expire in <strong>{{expiry}} Hours</strong>.
-                    If you didn’t create a Pay Buddy account, you can safely ignore this email.
+
+                  <p>
+                    This OTP will expire in
+                    <strong>{{expiry}} minute{% if expiry > 1 %}s{% endif %}</strong>.
                   </p>
+
+                  <hr>
+
+                  <p style="font-size:14px;color:#64748b;">
+                    If you didn’t request this, you can safely ignore this email.
+                    Your account will remain unverified until you complete the process.
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td class="footer">
+                  <strong>{{app_title}}</strong>
                 </td>
               </tr>
 
@@ -147,7 +167,6 @@
       </tr>
     </tbody>
   </table>
-
 </body>
 
 </html>

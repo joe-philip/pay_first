@@ -1,7 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-from django.conf import settings
-from pytz import timezone
+from django.utils.timezone import now
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import View
@@ -58,7 +57,7 @@ class CanUpdateTransaction(BasePermission):
     def has_object_permission(self, request: Request, view: View, obj: Transactions):
         if request.method == "PUT":
             if not bool(obj.pending_amount):
-                if (obj.updated_at + timedelta(days=30)) < datetime.now(tz=timezone(settings.TIME_ZONE)):
+                if (obj.updated_at + timedelta(days=30)) < now():
                     return False
         return True
 
@@ -99,7 +98,7 @@ class CanUpdateRepayment(BasePermission):
 
     def has_object_permission(self, request: Request, view: View, obj: Repayments):
         if request.method == "PUT":
-            if (obj.updated_at + timedelta(days=30)) < datetime.now(tz=timezone(settings.TIME_ZONE)):
+            if (obj.updated_at + timedelta(days=30)) < now():
                 return False
         return True
 

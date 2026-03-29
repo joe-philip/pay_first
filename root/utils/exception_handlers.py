@@ -20,8 +20,8 @@ def exception_handler(exc: Exception, context: dict):
     """
     if isinstance(exc, APIException):
         detail = exc.detail
-        code = getattr(detail, "code", "")
-        return Response(fail(exc.detail, code=code), status=exc.status_code)
+        code = exc.get_codes()
+        return Response(fail(detail, code=code), status=exc.status_code)
     elif isinstance(exc, Http404):
         return Response(fail(str(exc)), status=404)
     elif isinstance(exc, ValidationError):

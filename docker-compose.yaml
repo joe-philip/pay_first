@@ -1,6 +1,15 @@
 version: "3.9"
 
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - ./.env
+    networks:
+      - pay-first-network
   redis:
     image: redis:8.2.3
     container_name: redis
@@ -22,8 +31,7 @@ services:
   web:
     image: pay-first-web-app
     build: .
-    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client manage.py runserver 0.0.0.0:8000 # For debugging with VSCode
-    # command: python manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
@@ -33,6 +41,31 @@ services:
       - db
     env_file:
       - ./.env
+    networks:
+      - pay-first-network
+
+  worker:
+    build: .
+    command: python -m celery -A root worker -l info
+    volumes:
+      - .:/app
+    ports:
+      - "5680:5680"
+    depends_on:
+      - rabbitmq
+      - redis
+    networks:
+      - pay-first-network
+  celery-beat:
+    build: .
+    command: python --wait-for-client -m celery -A root beat -l info
+    volumes:
+      - .:/app
+    ports:
+      - "5681:5681"
+    depends_on:
+      - rabbitmq
+      - redis
     networks:
       - pay-first-network
 

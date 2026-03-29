@@ -11,7 +11,7 @@
 ## Running with Docker
 
 1. Make sure you have Docker and Docker Compose installed.
-2. Create an `Dokcerfile` file in the project root with the necessary startup commands. Format for `Dockerfile` is as follows
+2. Create an `Dockerfile` file in the project root with the necessary startup commands. Format for `Dockerfile` is as follows
    ```Dokckerfile
    FROM python:3.12-slim
 
@@ -35,6 +35,16 @@
    version: "3.9"
 
    services:
+      rabbitmq:
+         image: rabbitmq:3-management
+         ports:
+            - "5672:5672"
+            - "15672:15672"
+         env_file:
+            - ./.env
+         networks:
+            - pay-first-network
+
       redis:
          image: redis:8.2.3
          container_name: redis
@@ -42,6 +52,7 @@
             - "6379:6379"
          networks:
             - pay-first-network
+
       db:
          image: postgres:16
          env_file:
@@ -56,7 +67,6 @@
       web:
          image: pay-first-web-app
          build: .
-         # command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client manage.py runserver 0.0.0.0:8000 # For debugging with VSCode
          command: python manage.py runserver 0.0.0.0:8000
          volumes:
             - .:/app
@@ -69,6 +79,30 @@
             - ./.env
          networks:
             - pay-first-network
+
+      worker:
+         build: .
+         command: celery -A root worker -l info --concurrency=4
+         volumes:
+            - .:/app
+         depends_on:
+            - rabbitmq
+            - redis
+         networks:
+            - pay-first-network
+
+      celery-beat:
+         build: .
+         command: celery -A root beat -l info
+         volumes:
+         - .:/app
+         ports:
+         - "5681:5681"
+         depends_on:
+         - rabbitmq
+         - redis
+         networks:
+         - pay-first-network
 
       tests:
          build: .
@@ -90,48 +124,7 @@
    networks:
       pay-first-network:
    ```
-5. Create a `.env` file with the following format:
-   ```
-   SECRET_KEY = django-insecure-pvl*_ypzk)2bzhl77u2y$q801vus)+r6xik3+@f&frn3s-$^f
-   ALLOWED_HOSTS=*
-   DEBUG=1
-
-   POSTGRES_DB=postgres
-   POSTGRES_USER=postgres
-   POSTGRES_PASSWORD=dbpassword
-   DB_PORT=5432
-   DB_HOST=db
-
-   AUTH_TOKEN_EXPIRY_SECONDS=0
-   AUTH_TOKEN_EXPIRY_MINUTES=0
-   AUTH_TOKEN_EXPIRY_HOURS=0
-   AUTH_TOKEN_EXPIRY_DAYS=0
-
-   CORS_ALLOWED_ORIGINS=http://127.0.0.1:3000,http://localhost:3000
-   CORS_ALLOW_ALL_ORIGINS=0
-
-   EMAIL_HOST
-   EMAIL_PORT
-   EMAIL_HOST_USER
-   EMAIL_HOST_PASSWORD
-   DEFAULT_FROM_EMAIL
-
-   RESET_PASSWORD_LINK_EXPIRY_SECONDS
-   RESET_PASSWORD_URL
-
-   EMAIL_VERIFICATION_URL
-
-   REDIS_HOST=redis
-   REDIS_PORT=6379
-   REDIS_CACHE_DB=1
-   ```
-  
-      Tip: you can copy the provided example file and update values:
-
-      ```bash
-      cp .env.example .env
-      # then edit .env to set secure passwords / secrets
-      ```
+5. Create a `.env` file similar to `.env.example`
 6. Start the app with:
 
    ```bash

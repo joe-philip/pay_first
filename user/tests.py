@@ -1,16 +1,15 @@
 from copy import deepcopy
-from datetime import datetime
 
 from django.core.management import call_command
+from django.utils.timezone import now
 from pytest import fixture
-from pytz import timezone
 from rest_framework.test import APITestCase
 
 from main.tests import BasicTestsMixin
 
 from .choices import TransactionTypeChoices
-from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources, Repayments,
-                     Transactions)
+from .models import (ContactGroup, Contacts, PaymentMethods, PaymentSources,
+                     Repayments, Transactions)
 
 # Create your tests here.
 
@@ -30,7 +29,6 @@ DEFAULT_DEBIT_TRANSACTION_NAME = "Test Debit Transaction"
 
 DEFAULT_PAYMENT_SOURCE_LABEL = "Test Payment Source"
 
-DEFAULT_TIMEZONE = timezone("Asia/Calcutta")
 DEFAULT_REPAYMET_LABEL = "Test Repayment"
 
 
@@ -82,7 +80,7 @@ class MainTestsMixin(BasicTestsMixin):
         kwargs["amount"] = kwargs.get("amount", 10)
         kwargs["description"] = kwargs.get("description", "")
         kwargs["return_date"] = kwargs.get("return_date")
-        kwargs["date"] = kwargs.get("date", datetime.now(tz=DEFAULT_TIMEZONE))
+        kwargs["date"] = kwargs.get("date", now())
         kwargs["payment_method"] = self.create_payment_method()
         kwargs["transaction_reference"] = kwargs.get(
             "transaction_reference", DEFAULT_TRANSACTION_TRANSACTION_REFERENCE_NAME
@@ -876,7 +874,7 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
             "amount": 10,
             "description": "",
             "return_date": None,
-            "date": str(datetime.now(tz=DEFAULT_TIMEZONE)),
+            "date": str(now()),
             "payment_method": self.create_payment_method().id,
             "transaction_reference": DEFAULT_TRANSACTION_TRANSACTION_REFERENCE_NAME,
             "payment_source": self.create_payment_source(owner=self.token.user).id
@@ -1354,7 +1352,7 @@ class TransactionsAPITestCase(APITestCase, MainTestsMixin):
             "amount": 10,
             "description": "",
             "return_date": None,
-            "date": str(datetime.now(tz=DEFAULT_TIMEZONE)),
+            "date": str(now()),
         }
         response = self.client.put(
             self.base_url + f"/0/",
@@ -1415,7 +1413,7 @@ class RepaymentAPITestCase(APITestCase, MainTestsMixin):
             "amount": 5,
             "transaction": self.credit_transaction.id,
             "remarks": "",
-            "date": str(datetime.now(tz=DEFAULT_TIMEZONE)),
+            "date": str(now()),
             "payment_method": self.create_payment_method().id,
             "transaction_reference": DEFAULT_REPAYMENT_TRANSACTION_REFERENCE_NAME,
             "payment_source": self.create_payment_source(owner=self.token.user).id
