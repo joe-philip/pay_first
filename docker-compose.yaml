@@ -36,7 +36,6 @@ services:
       - .:/app
     ports:
       - "8000:8000"
-      - "5678:5678"
     depends_on:
       - db
     env_file:
@@ -49,8 +48,6 @@ services:
     command: python -m celery -A root worker -l info
     volumes:
       - .:/app
-    ports:
-      - "5680:5680"
     depends_on:
       - rabbitmq
       - redis
@@ -61,8 +58,6 @@ services:
     command: python -m celery -A root beat -l info
     volumes:
       - .:/app
-    ports:
-      - "5681:5681"
     depends_on:
       - rabbitmq
       - redis
