@@ -67,7 +67,6 @@
       web:
          image: pay-first-web-app
          build: .
-         # command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client manage.py runserver 0.0.0.0:8000 # For debugging with VSCode
          command: python manage.py runserver 0.0.0.0:8000
          volumes:
             - .:/app
