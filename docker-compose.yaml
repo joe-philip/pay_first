@@ -58,7 +58,7 @@ services:
       - pay-first-network
   celery-beat:
     build: .
-    command: python --wait-for-client -m celery -A root beat -l info
+    command: python -m celery -A root beat -l info
     volumes:
       - .:/app
     ports:
@@ -66,21 +66,6 @@ services:
     depends_on:
       - rabbitmq
       - redis
-    networks:
-      - pay-first-network
-
-  tests:
-    build: .
-    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m pytest -v
-    volumes:
-      - .:/app
-    ports:
-      - "5679:5678"
-    restart: always
-    depends_on:
-      - db
-    env_file:
-      - ./.env
     networks:
       - pay-first-network
 
