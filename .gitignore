@@ -12,3 +12,4 @@ Dockerfile
 assets
 logs
 celerybeat-schedule
+media
