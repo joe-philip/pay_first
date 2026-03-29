@@ -11,26 +11,7 @@
 ## Running with Docker
 
 1. Make sure you have Docker and Docker Compose installed.
-2. Create an `Dockerfile` file in the project root with the necessary startup commands. Format for `Dockerfile` is as follows
-   ```Dokckerfile
-   FROM python:3.12-slim
-
-   ENV PYTHONDONTWRITEBYTECODE=1
-   ENV PYTHONUNBUFFERED=1
-
-   WORKDIR /app
-
-   COPY requirements.txt .
-   COPY dev-requirements.txt .
-   RUN pip install --upgrade pip
-   RUN pip install -r requirements.txt
-   RUN pip install -r dev-requirements.txt
-
-   COPY . .
-
-   CMD ["gunicorn", "myproject.wsgi:application", "--bind", "0.0.0.0:8000"]
-   ```
-4. Create a docker-compose.yaml file with the following format:
+2. Create a docker-compose.yaml file with the following format:
    ```yaml
    version: "3.9"
 
@@ -125,8 +106,8 @@
    networks:
       pay-first-network:
    ```
-5. Create a `.env` file similar to `.env.example`
-6. Start the app with:
+3. Create a `.env` file similar to `.env.example`
+4. Start the app with:
 
    ```bash
    docker compose up --build
