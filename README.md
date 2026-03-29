@@ -7,6 +7,8 @@
 - Python 3.12
 - PostgreSQL 16
 - pip
+- rabbitmq
+- redis
 
 ## Running with Docker
 
