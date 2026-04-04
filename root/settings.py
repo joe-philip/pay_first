@@ -167,7 +167,8 @@ REST_FRAMEWORK = {
 
     "DEFAULT_FILTER_BACKENDS": [
         "rest_framework.filters.SearchFilter",
-        "rest_framework.filters.OrderingFilter"
+        "rest_framework.filters.OrderingFilter",
+        "root.utils.filters.filters.URLFilterBackend"
     ],
     "SEARCH_PARAM": "search",
     "ORDERING_PARAM": "ordering",
