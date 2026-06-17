@@ -13,12 +13,14 @@ services:
   redis:
     image: redis:8.2.3
     container_name: redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
     networks:
       - pay-first-network
   db:
     image: postgres:16
+    restart: unless-stopped
     env_file:
       - ./.env
     volumes:
@@ -27,17 +29,26 @@ services:
       - "5432:5432"
     networks:
       - pay-first-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
     image: pay-first-web-app
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn root.wsgi:application --config gunicorn.conf.py
+    restart: unless-stopped
     volumes:
       - .:/app
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     env_file:
       - ./.env
     networks:
@@ -46,6 +57,7 @@ services:
   worker:
     build: .
     command: python -m celery -A root worker -l info
+    restart: unless-stopped
     volumes:
       - .:/app
     depends_on:
@@ -56,6 +68,7 @@ services:
   celery-beat:
     build: .
     command: python -m celery -A root beat -l info
+    restart: unless-stopped
     volumes:
       - .:/app
     depends_on:
